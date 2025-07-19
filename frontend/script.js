@@ -2,6 +2,92 @@
 let currentUser = null;
 let currentSection = 'emr';
 
+// Función para convertir texto a formato título
+String.prototype.toTitleCase = function() {
+    return this.toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+};
+
+// Función de diagnóstico para debuggear problemas
+async function diagnosticVolverALista() {
+    console.log('🔍 === DIAGNÓSTICO VOLVER A LA LISTA ===');
+    
+    // 1. Verificar elementos DOM
+    console.log('📋 Verificando elementos DOM...');
+    const petHistoriaListContainer = document.getElementById('petHistoriaListContainer');
+    const allPetsSection = document.getElementById('allPetsHistoriaSection');
+    const historiaDetails = document.getElementById('historiaClinicaDetails');
+    
+    console.log('- petHistoriaListContainer:', !!petHistoriaListContainer);
+    console.log('- allPetsSection:', !!allPetsSection);
+    console.log('- historiaDetails:', !!historiaDetails);
+    
+    if (petHistoriaListContainer) {
+        console.log('- Contenido actual del container:', petHistoriaListContainer.innerHTML.substring(0, 200));
+    }
+    
+    // 2. Verificar datos
+    console.log('📋 Verificando datos...');
+    console.log('- migratedPatients.length:', migratedPatients.length);
+    console.log('- migratedPatients primeros 2:', migratedPatients.slice(0, 2));
+    
+    // 3. Verificar API
+    console.log('📋 Verificando API...');
+    console.log('- api objeto:', typeof api);
+    console.log('- api.token:', api?.token ? 'Presente' : 'Ausente');
+    
+    // 4. Intentar cargar datos
+    if (migratedPatients.length === 0) {
+        console.log('📋 Intentando cargar datos desde API...');
+        try {
+            const testData = await api.getMigratedPatients();
+            console.log('✅ Datos recibidos:', testData.length);
+        } catch (error) {
+            console.error('❌ Error al cargar datos:', error);
+        }
+    }
+    
+    console.log('🔍 === FIN DIAGNÓSTICO ===');
+}
+
+// Función de prueba simple para verificar visualización
+function testVisualizacion() {
+    console.log('🧪 === PRUEBA DE VISUALIZACIÓN ===');
+    
+    const container = document.getElementById('petHistoriaListContainer');
+    if (!container) {
+        console.error('❌ No se encontró petHistoriaListContainer');
+        return;
+    }
+    
+    // Insertar contenido de prueba simple
+    container.innerHTML = '<div style="background: red; padding: 20px; color: white; font-size: 20px;">PRUEBA VISUAL - ¿Puedes ver esto?</div>';
+    
+    // Verificar visibilidad de todos los contenedores padre
+    const allPetsSection = document.getElementById('allPetsHistoriaSection');
+    const historiaResults = document.getElementById('historiaResults');
+    
+    if (allPetsSection) {
+        allPetsSection.style.display = 'block';
+        allPetsSection.style.visibility = 'visible';
+        console.log('✅ allPetsSection forzado a visible');
+    }
+    
+    if (historiaResults) {
+        historiaResults.style.display = 'block';
+        historiaResults.style.visibility = 'visible';
+        console.log('✅ historiaResults forzado a visible');
+    }
+    
+    // Ocultar otros elementos que puedan estar tapando
+    const historiaDetails = document.getElementById('historiaClinicaDetails');
+    if (historiaDetails) {
+        historiaDetails.style.display = 'none';
+        console.log('✅ historiaDetails ocultado');
+    }
+    
+    console.log('🧪 Prueba insertada. ¿Ves un recuadro rojo con texto blanco?');
+}
+
 // Datos que se cargarán desde la API
 let medicalRecords = [];
 let inventory = [];
@@ -9,6 +95,11 @@ let clients = [];
 let communications = [];
 let sales = [];
 let pets = []; // Nueva variable global para las mascotas
+let migratedPatients = []; // Variable global para los pacientes migrados
+// Variables para paginación de comunicaciones
+let currentCommunicationPage = 1;
+let communicationsPerPage = 10;
+let filteredCommunications = [];
 
 // Configuración de zona horaria
 const ARGENTINA_TIMEZONE = 'America/Argentina/Buenos_Aires';
@@ -39,15 +130,71 @@ function getArgentinaDateTime() {
 function formatDateInArgentina(dateString) {
     if (!dateString) return null;
     
-    const date = new Date(dateString);
-    
-    // Formatear en zona horaria de Argentina
-    return date.toLocaleDateString('es-AR', {
-        timeZone: ARGENTINA_TIMEZONE,
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-    });
+    try {
+        // Si es un objeto complejo (como los que vienen de la API), extraer el valor real
+        if (typeof dateString === 'object' && dateString !== null && !(dateString instanceof Date)) {
+            // Intentar extraer el valor real del objeto
+            let extractedValue = null;
+            
+            // Buscar propiedades comunes que podrían contener la fecha (tanto camelCase como snake_case)
+            if (dateString.valor !== undefined) {
+                extractedValue = dateString.valor;
+            } else if (dateString.value !== undefined) {
+                extractedValue = dateString.value;
+            } else if (dateString.date !== undefined) {
+                extractedValue = dateString.date;
+            } else if (dateString.createdAt !== undefined) {
+                extractedValue = dateString.createdAt;
+            } else if (dateString.created_at !== undefined) {
+                extractedValue = dateString.created_at;
+            } else if (dateString.updatedAt !== undefined) {
+                extractedValue = dateString.updatedAt;
+            } else if (dateString.updated_at !== undefined) {
+                extractedValue = dateString.updated_at;
+            } else if (dateString.nextAppointment !== undefined) {
+                extractedValue = dateString.nextAppointment;
+            } else if (dateString.next_appointment !== undefined) {
+                extractedValue = dateString.next_appointment;
+            } else if (dateString.valueOf && typeof dateString.valueOf === 'function') {
+                extractedValue = dateString.valueOf();
+            } else {
+                // Si no encontramos un valor específico, intentar convertir el objeto completo
+                extractedValue = String(dateString);
+            }
+            
+            // Recursivamente formatear el valor extraído
+            if (extractedValue !== null && extractedValue !== undefined) {
+                return formatDateInArgentina(extractedValue);
+            }
+        }
+        
+        // Si es una cadena, limpiar espacios y caracteres extraños
+        if (typeof dateString === 'string') {
+            dateString = dateString.trim();
+            
+            // Si está vacío o es "null", devolver null
+            if (!dateString || dateString === 'null' || dateString === 'undefined' || dateString === '[object Object]') {
+                return null;
+            }
+        }
+        
+        const date = new Date(dateString);
+        
+        // Verificar si la fecha es válida
+        if (isNaN(date.getTime())) {
+            return null;
+        }
+        
+        // Formatear en zona horaria de Argentina
+        return date.toLocaleDateString('es-AR', {
+            timeZone: ARGENTINA_TIMEZONE,
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        });
+    } catch (error) {
+        return null;
+    }
 }
 
 // Función para obtener fecha en formato YYYY-MM-DD en Argentina
@@ -65,41 +212,96 @@ function getArgentinaDateString(dateInput = null) {
     return formatter.format(date);
 }
 
-// Función para cargar datos desde la API
+
+// Función para cargar datos desde la API (optimizada - lazy loading)
 async function loadDataFromAPI() {
     try {
         const token = localStorage.getItem('authToken');
         if (!token) return;
 
-        // Cargar datos en paralelo
-        const [medicalData, inventoryData, clientsData, communicationsData, salesData, petsData] = await Promise.all([
-            api.getMedicalRecords().catch(() => []),
-            api.getInventory().catch(() => []),
-            api.getClients().catch(() => []),
-            api.getCommunications().catch(() => []),
-            api.getSales().catch(() => []),
-            api.getPets().catch(() => []) // Cargar datos de mascotas
-        ]);
-
-        medicalRecords = medicalData;
-        inventory = inventoryData;
-        clients = clientsData;
-        communications = communicationsData;
-        sales = salesData;
-        pets = petsData; // Asignar datos de mascotas a la variable global
-
-        console.log('✅ Datos cargados desde la API');
+        console.log('✅ API configurada para carga lazy');
+        // Los datos se cargarán cuando se necesiten en cada sección
     } catch (error) {
-        console.error('❌ Error al cargar datos desde la API:', error);
+        console.error('❌ Error al configurar API:', error);
     }
 }
 
+// Función para cargar datos de una sección específica
+async function loadSectionData(section) {
+    try {
+        const token = localStorage.getItem('authToken');
+        if (!token) return;
+
+        console.log(`🔄 Cargando datos para sección: ${section}`);
+        
+        switch (section) {
+            case 'emr':
+                if (medicalRecords.length === 0) {
+                    medicalRecords = await api.getMedicalRecords().catch(() => []);
+                    console.log('📋 Datos EMR cargados:', medicalRecords.length);
+                }
+                break;
+            case 'inventory':
+                if (inventory.length === 0) {
+                    inventory = await api.getInventory().catch(() => []);
+                    console.log('📦 Datos inventario cargados:', inventory.length);
+                }
+                break;
+            case 'clients':
+                if (clients.length === 0) {
+                    clients = await api.getClients().catch(() => []);
+                    console.log('👥 Datos clientes cargados:', clients.length);
+                }
+                break;
+
+            case 'communication':
+                if (communications.length === 0) {
+                    communications = await api.getCommunications().catch(() => []);
+                    console.log('📞 Datos comunicaciones cargados:', communications.length);
+                }
+                break;
+            case 'sales':
+                if (sales.length === 0) {
+                    sales = await api.getSales().catch(() => []);
+                    console.log('💰 Datos ventas cargados:', sales.length);
+                }
+                break;
+            case 'historia-clinica':
+                console.log('🔄 Iniciando carga de datos para historia clínica...');
+                if (migratedPatients.length === 0) {
+                    console.log('🔄 Llamando a api.getMigratedPatients()...');
+                    try {
+                        migratedPatients = await api.getMigratedPatients();
+                        console.log('✅ Datos mascotas migradas cargados exitosamente:', migratedPatients.length);
+                    } catch (error) {
+                        console.error('❌ Error al cargar mascotas migradas:', error);
+                        migratedPatients = [];
+                        
+                        // No mostrar error aquí, se manejará en showAllPetsInHistoriaClinica
+                        console.log('⚠️ Error en loadSectionData será manejado por showAllPetsInHistoriaClinica');
+                    }
+                } else {
+                    console.log('📋 Usando datos ya cargados:', migratedPatients.length);
+                }
+                break;
+        }
+    } catch (error) {
+        console.error(`❌ Error al cargar datos para ${section}:`, error);
+    }
+}
+
+
 // Event listeners
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔄 DOMContentLoaded ejecutándose...');
+    
     // Login form
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
+        console.log('✅ Formulario encontrado, agregando listener...');
         loginForm.addEventListener('submit', handleLogin);
+    } else {
+        console.error('❌ Formulario de login no encontrado');
     }
     
     // Verificar si hay sesión activa
@@ -107,41 +309,92 @@ document.addEventListener('DOMContentLoaded', function() {
     const authToken = localStorage.getItem('authToken');
     
     if (savedUser && authToken) {
+        console.log('🔄 Sesión activa encontrada, restaurando...');
         currentUser = JSON.parse(savedUser);
         api.token = authToken;
         
-        // Cargar datos y mostrar dashboard
-        loadDataFromAPI().then(() => {
-            showDashboard();
-        });
+        // Mostrar dashboard sin cargar datos
+        showDashboard();
+    } else {
+        console.log('📝 No hay sesión activa');
     }
 });
 
+
 // Función de login
 async function handleLogin(event) {
+    console.log('🔄 handleLogin ejecutándose...');
     event.preventDefault();
     
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
     const errorMessage = document.getElementById('error-message');
+    const loginButton = document.querySelector('.login-btn');
     
-    console.log('Intentando login con:', username); // Debug
+    console.log('📝 Datos de login:', { username, password: '***' });
+    
+    if (!username || !password) {
+        console.error('❌ Usuario o contraseña vacíos');
+        errorMessage.textContent = 'Por favor, ingresa usuario y contraseña';
+        errorMessage.style.display = 'block';
+        return;
+    }
+    
+    // Verificar que api existe
+    if (!api) {
+        console.error('❌ API no está disponible');
+        errorMessage.textContent = 'Error: API no disponible';
+        errorMessage.style.display = 'block';
+        return;
+    }
+    
+    const buttonIcon = loginButton.querySelector('i');
+    const buttonText = loginButton.querySelector('.btn-text');
     
     try {
+        // Mostrar estado de carga
+        loginButton.disabled = true;
+        loginButton.classList.add('loading');
+        buttonIcon.className = 'fas fa-spinner fa-spin';
+        if (buttonText) {
+            buttonText.textContent = 'Iniciando sesión...';
+        } else {
+            loginButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Iniciando sesión...';
+        }
+        
+        // Ocultar mensaje de error previo
+        errorMessage.style.display = 'none';
+        
+        console.log('🔄 Enviando petición de login...');
+        
         const response = await api.login(username, password);
+        
+        console.log('✅ Login exitoso:', response);
         
         currentUser = response.user;
         localStorage.setItem('currentUser', JSON.stringify(currentUser));
         
-        console.log('Login exitoso, mostrando dashboard'); // Debug
+        // Actualizar botón a estado de éxito
+        buttonIcon.className = 'fas fa-check';
+        loginButton.innerHTML = '<i class="fas fa-check"></i> ¡Bienvenido!';
         
-        // Cargar datos desde la API
+        // Configurar API (sin cargar datos)
         await loadDataFromAPI();
         
+        console.log('🎯 Mostrando dashboard...');
         showDashboard();
+        
     } catch (error) {
-        console.log('Login fallido:', error.message); // Debug
-        errorMessage.textContent = error.message;
+        console.error('❌ Error en login:', error);
+        
+        // Restaurar estado del botón
+        loginButton.disabled = false;
+        loginButton.classList.remove('loading');
+        buttonIcon.className = 'fas fa-sign-in-alt';
+        loginButton.innerHTML = '<i class="fas fa-sign-in-alt"></i> Iniciar Sesión';
+        
+        // Mostrar mensaje de error
+        errorMessage.textContent = error.message || 'Error al iniciar sesión';
         errorMessage.style.display = 'block';
     }
 }
@@ -205,9 +458,10 @@ function createDashboard() {
                         <i class="fas fa-file-medical"></i>
                         Registros Médicos
                     </button>
-                    <button class="nav-btn nav-btn-blue" onclick="loadSection('fichas')">
-                        <i class="fas fa-folder-open"></i>
-                        Fichas
+                    
+                    <button class="nav-btn nav-btn-blue" onclick="loadSection('historia-clinica')">
+                        <i class="fas fa-file-medical-alt"></i>
+                        Historia Clínica
                     </button>
                     <button class="nav-btn nav-btn-orange" onclick="loadSection('inventory')">
                         <i class="fas fa-boxes"></i>
@@ -242,9 +496,25 @@ function createDashboard() {
     console.log('Dashboard HTML creado y añadido al body'); // Debug
 }
 
+
 // Función para cargar secciones
-function loadSection(section) {
+async function loadSection(section) {
+    console.log(`🔄 loadSection llamada con: ${section}`);
     currentSection = section;
+    
+    // Mostrar indicador de carga
+    const contentArea = document.getElementById('content-area');
+    if (!contentArea) {
+        console.error('❌ content-area no encontrado');
+        return;
+    }
+    
+    console.log('📋 Mostrando indicador de carga...');
+    contentArea.innerHTML = '<div class="loading-indicator"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>';
+    
+    // Cargar datos específicos de la sección
+    console.log(`📋 Cargando datos para sección: ${section}`);
+    await loadSectionData(section);
     
     // Actualizar botones de navegación
     document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -257,8 +527,6 @@ function loadSection(section) {
         activeBtn.classList.add('active');
     }
     
-    const contentArea = document.getElementById('content-area');
-    
     switch (section) {
         case 'emr':
             contentArea.innerHTML = getEMRContent();
@@ -269,29 +537,55 @@ function loadSection(section) {
         case 'clients':
             contentArea.innerHTML = getClientsContent();
             break;
-        case 'fichas':
-            contentArea.innerHTML = getFichasContent();
+
+        case 'historia-clinica':
+            console.log('📋 Renderizando contenido de Historia Clínica...');
+            const historiaContent = getHistoriaClinicaContent();
+            console.log('📋 Contenido generado, longitud:', historiaContent.length);
+            contentArea.innerHTML = historiaContent;
+            console.log('📋 Contenido insertado en DOM');
+            
             // Cargar la lista inicial de mascotas después de renderizar el contenido
-            setTimeout(() => {
-                showAllPetsInSearch();
-                // Agregar botón temporal para insertar datos de ejemplo
-                const fichasSection = document.querySelector('.fichas-search');
-                if (fichasSection && pets.length === 0) {
-                    const sampleDataButton = document.createElement('button');
-                    sampleDataButton.className = 'btn btn-warning';
-                    sampleDataButton.style.marginTop = '10px';
-                    sampleDataButton.innerHTML = '<i class="fas fa-sync"></i> Sincronizar Mascotas desde EMR';
-                    sampleDataButton.onclick = insertSampleData;
-                    fichasSection.appendChild(sampleDataButton);
+            console.log('📋 Programando carga de mascotas en 200ms...');
+            setTimeout(async () => {
+                console.log('⏰ Timeout ejecutándose, iniciando showAllPetsInHistoriaClinica...');
+                try {
+                    await showAllPetsInHistoriaClinica();
+                    console.log('✅ showAllPetsInHistoriaClinica completado exitosamente');
+                } catch (error) {
+                    console.error('❌ Error al mostrar mascotas en historia clínica:', error);
+                    const container = document.getElementById('petHistoriaListContainer');
+                    if (container) {
+                        container.innerHTML = `
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <h3>Error al cargar mascotas</h3>
+                                <p>${error.message || 'Error al cargar la lista de mascotas'}</p>
+                                <button class="btn btn-primary" onclick="showAllPetsInHistoriaClinica()">
+                                    <i class="fas fa-refresh"></i> Reintentar
+                                </button>
+                            </div>
+                        `;
+                    }
                 }
-            }, 100);
+            }, 200); // Aumentar el tiempo para asegurar renderizado completo
             break;
+        
         case 'communication':
             contentArea.innerHTML = getCommunicationContent();
+            // Inicializar tabla de comunicaciones después de renderizar
+            setTimeout(() => {
+                updateCommunicationsTable();
+            }, 100);
             break;
         case 'calendar':
             contentArea.innerHTML = getCalendarContent();
             refreshCalendar();
+            // Debug del calendario después de cargar
+            setTimeout(() => {
+                console.log('🔍 DEBUG: Verificando datos del calendario después de cargar');
+                debugCalendarData();
+            }, 1000);
             break;
         case 'sales':
             contentArea.innerHTML = getSalesContent();
@@ -315,10 +609,12 @@ function getEMRContent() {
             <tr>
                 <td>${record.pet_name || record.petName}</td>
                 <td>${clientInfo}</td>
-                <td>${record.date}</td>
+                
+                <td>${formatDateInArgentina(record.date) || 'N/A'}</td>
                 <td>${record.diagnosis}</td>
                 <td>${record.treatment}</td>
-                <td>${record.next_appointment || record.nextAppointment || 'N/A'}</td>
+                
+                <td>${record.petName || record.pet_name || 'N/A'}</td>
                 <td>
                     <button class="btn btn-primary" onclick="editRecord(${record.id})">
                         <i class="fas fa-edit"></i>
@@ -374,7 +670,7 @@ function getEMRContent() {
                         <th>Fecha</th>
                         <th>Diagnóstico</th>
                         <th>Tratamiento</th>
-                        <th>Próxima Cita</th>
+                        <th>Mascota Atendida</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -389,10 +685,6 @@ function getEMRContent() {
 // Contenido de Inventario
 function getInventoryContent() {
     const inventoryHTML = inventory.map(item => {
-        const minStock = item.min_stock || item.minStock || 0;
-        const stockStatus = item.stock <= minStock ? 'status-low' : 
-                           item.stock <= minStock * 1.5 ? 'status-medium' : 'status-good';
-        
         const expiryDate = item.expiry_date || item.expiryDate;
         const expiryStatus = expiryDate && new Date(expiryDate) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) ? 'status-low' : 'status-good';
         
@@ -400,11 +692,9 @@ function getInventoryContent() {
             <tr>
                 <td>${item.name}</td>
                 <td>${item.category}</td>
-                <td class="${stockStatus}">${item.stock}</td>
-                <td>${minStock}</td>
-                <td class="${expiryStatus}">${expiryDate || 'N/A'}</td>
-                <td>${item.supplier || 'N/A'}</td>
-                <td>${item.barcode || 'N/A'}</td>
+                <td>${item.stock}</td>
+                
+                <td class="${expiryStatus}">${expiryDate ? formatDateInArgentina(expiryDate) : 'N/A'}</td>
                 <td>
                     <button class="btn btn-success btn-sm" onclick="addProductToCart(${item.id})" title="Agregar al carrito">
                         <i class="fas fa-cart-plus"></i>
@@ -420,20 +710,10 @@ function getInventoryContent() {
         `;
     }).join('');
     
-    const lowStockItems = inventory.filter(item => {
-        const minStock = item.min_stock || item.minStock || 0;
-        return item.stock <= minStock;
-    }).length;
-    
     const expiringItems = inventory.filter(item => {
         const expiryDate = item.expiry_date || item.expiryDate;
         return expiryDate && new Date(expiryDate) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
     }).length;
-    
-    const alertsHTML = `
-        ${lowStockItems > 0 ? `<div class="alert alert-danger">¡Atención! ${lowStockItems} productos con stock bajo</div>` : ''}
-        ${expiringItems > 0 ? `<div class="alert alert-warning">¡Atención! ${expiringItems} productos próximos a vencer</div>` : ''}
-    `;
     
     return `
         <div class="section active">
@@ -446,30 +726,16 @@ function getInventoryContent() {
                     <p>Total de Productos</p>
                 </div>
                 <div class="stat-card">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <h3>${lowStockItems}</h3>
-                    <p>Stock Bajo</p>
-                </div>
-                <div class="stat-card">
                     <i class="fas fa-clock"></i>
                     <h3>${expiringItems}</h3>
                     <p>Próximos a Vencer</p>
                 </div>
             </div>
             
-            <!-- Carteles de alerta eliminados -->
-            
-            <!-- Sección de Carrito y Escáner -->
-            <div class="cart-scanner-section">
+            <!-- Sección de Carrito -->
+            <div class="cart-section">
                 <h3>Carrito de Ventas</h3>
-                <div class="cart-scanner-actions">
-                    <div class="barcode-scanner">
-                        <input type="text" id="barcodeInput" placeholder="Escanear código de barras para agregar al carrito..." onkeypress="handleBarcodeInput(event)">
-                        <button class="btn btn-success" onclick="addToCart()">
-                            <i class="fas fa-shopping-cart"></i>
-                            Agregar al Carrito
-                        </button>
-                    </div>
+                <div class="cart-actions">
                     <button class="btn btn-primary cart-button" onclick="showSalesCart()" id="cartButton">
                         <i class="fas fa-shopping-cart"></i>
                         Ver Carrito (<span id="cartCount">0</span>)
@@ -498,10 +764,7 @@ function getInventoryContent() {
                         <th>Producto</th>
                         <th>Categoría</th>
                         <th>Stock</th>
-                        <th>Stock Mínimo</th>
                         <th>Fecha Vencimiento</th>
-                        <th>Proveedor</th>
-                        <th>Código de Barras</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -513,25 +776,15 @@ function getInventoryContent() {
     `;
 }
 
+// Variables para paginación de clientes
+let currentClientPage = 1;
+let clientsPerPage = 25;
+let filteredClients = [];
+
 // Contenido de Clientes
 function getClientsContent() {
-    const clientsHTML = clients.map(client => `
-        <tr>
-            <td>${client.name}</td>
-            <td>${client.email || 'N/A'}</td>
-            <td>${client.phone || 'N/A'}</td>
-            <td>${client.address || 'N/A'}</td>
-            <td>${client.created_at ? new Date(client.created_at).toLocaleDateString() : 'N/A'}</td>
-            <td>
-                <button class="btn btn-primary" onclick="editClient(${client.id})">
-                    <i class="fas fa-edit"></i>
-                </button>
-                <button class="btn btn-danger" onclick="deleteClient(${client.id})">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </td>
-        </tr>
-    `).join('');
+    // Inicializar clientes filtrados
+    filteredClients = [...clients];
     
     return `
         <div class="section active">
@@ -555,64 +808,259 @@ function getClientsContent() {
                 </div>
             </div>
             
-            <button class="btn btn-success" onclick="showAddClientModal()">
-                <i class="fas fa-plus"></i>
-                Nuevo Cliente
-            </button>
+            <div class="clients-controls">
+                <button class="btn btn-success" onclick="showAddClientModal()">
+                    <i class="fas fa-plus"></i>
+                    Nuevo Cliente
+                </button>
+                
+                <div class="search-container">
+                    <input type="text" id="clientSearch" placeholder="Buscar clientes por nombre, email o teléfono..." onkeyup="searchClients()">
+                    <i class="fas fa-search search-icon"></i>
+                </div>
+                
+                <div class="pagination-controls">
+                    <label>Mostrar:</label>
+                    <select id="clientsPerPageSelect" onchange="changeClientsPerPage()">
+                        <option value="25">25 por página</option>
+                        <option value="50">50 por página</option>
+                        <option value="100">100 por página</option>
+                    </select>
+                </div>
+            </div>
             
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Nombre</th>
-                        <th>Email</th>
-                        <th>Teléfono</th>
-                        <th>Dirección</th>
-                        <th>Fecha Registro</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${clientsHTML}
-                </tbody>
-            </table>
+            <div id="clientsTableContainer">
+                ${renderClientsTable()}
+            </div>
+            
+            <div id="clientsPagination">
+                ${renderClientsPagination()}
+            </div>
         </div>
     `;
 }
 
-// Contenido de Fichas
-function getFichasContent() {
+// Renderizar tabla de clientes
+// Función para obtener las mascotas de un cliente
+function getClientPets(clientId) {
+    return pets.filter(pet => pet.clientId === clientId);
+}
+
+// Función para formatear las mascotas como texto
+function formatClientPets(clientId) {
+    const clientPets = getClientPets(clientId);
+    
+    if (clientPets.length === 0) {
+        return '<span class="no-pets">Sin mascotas</span>';
+    }
+    
+    if (clientPets.length === 1) {
+        const pet = clientPets[0];
+        return `<span class="pet-info">${pet.name} (${pet.species})</span>`;
+    }
+    
+    // Si tiene múltiples mascotas, mostrar las primeras 2 y un contador
+    const firstPets = clientPets.slice(0, 2);
+    const petNames = firstPets.map(pet => `${pet.name} (${pet.species})`).join(', ');
+    
+    if (clientPets.length > 2) {
+        return `<span class="pet-info">${petNames} <span class="more-pets">+${clientPets.length - 2} más</span></span>`;
+    }
+    
+    return `<span class="pet-info">${petNames}</span>`;
+}
+
+function renderClientsTable() {
+    const startIndex = (currentClientPage - 1) * clientsPerPage;
+    const endIndex = startIndex + clientsPerPage;
+    const paginatedClients = filteredClients.slice(startIndex, endIndex);
+    
+    const clientsHTML = paginatedClients.map(client => `
+        <tr>
+            <td>${client.name}</td>
+            <td>${client.email || 'N/A'}</td>
+            <td>${client.phone || 'N/A'}</td>
+            <td>${client.address || 'N/A'}</td>
+            <td>${formatClientPets(client.id)}</td>
+            <td>
+                <button class="btn btn-primary btn-sm" onclick="editClient(${client.id})" title="Editar">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-danger btn-sm" onclick="deleteClient(${client.id})" title="Eliminar">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+    
+    return `
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Email</th>
+                    <th>Teléfono</th>
+                    <th>Dirección</th>
+                    <th>Mascotas</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${clientsHTML}
+            </tbody>
+        </table>
+        
+        <div class="table-info">
+            Mostrando ${startIndex + 1} - ${Math.min(endIndex, filteredClients.length)} de ${filteredClients.length} clientes
+        </div>
+    `;
+}
+
+// Renderizar paginación de clientes
+function renderClientsPagination() {
+    const totalPages = Math.ceil(filteredClients.length / clientsPerPage);
+    
+    if (totalPages <= 1) return '';
+    
+    let paginationHTML = '<div class="pagination">';
+    
+    // Botón anterior
+    if (currentClientPage > 1) {
+        paginationHTML += `<button class="btn btn-outline-primary" onclick="goToClientPage(${currentClientPage - 1})">
+            <i class="fas fa-chevron-left"></i> Anterior
+        </button>`;
+    }
+    
+    // Números de página
+    const startPage = Math.max(1, currentClientPage - 2);
+    const endPage = Math.min(totalPages, currentClientPage + 2);
+    
+    if (startPage > 1) {
+        paginationHTML += `<button class="btn btn-outline-primary" onclick="goToClientPage(1)">1</button>`;
+        if (startPage > 2) {
+            paginationHTML += '<span class="pagination-dots">...</span>';
+        }
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+        const activeClass = i === currentClientPage ? 'btn-primary' : 'btn-outline-primary';
+        paginationHTML += `<button class="btn ${activeClass}" onclick="goToClientPage(${i})">${i}</button>`;
+    }
+    
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+            paginationHTML += '<span class="pagination-dots">...</span>';
+        }
+        paginationHTML += `<button class="btn btn-outline-primary" onclick="goToClientPage(${totalPages})">${totalPages}</button>`;
+    }
+    
+    // Botón siguiente
+    if (currentClientPage < totalPages) {
+        paginationHTML += `<button class="btn btn-outline-primary" onclick="goToClientPage(${currentClientPage + 1})">
+            Siguiente <i class="fas fa-chevron-right"></i>
+        </button>`;
+    }
+    
+    paginationHTML += '</div>';
+    
+    return paginationHTML;
+}
+
+// Funciones de paginación y búsqueda de clientes
+function searchClients() {
+    const searchTerm = document.getElementById('clientSearch').value.toLowerCase();
+    
+    filteredClients = clients.filter(client => {
+        return (
+            client.name.toLowerCase().includes(searchTerm) ||
+            (client.email && client.email.toLowerCase().includes(searchTerm)) ||
+            (client.phone && client.phone.toLowerCase().includes(searchTerm))
+        );
+    });
+    
+    currentClientPage = 1; // Resetear a primera página
+    updateClientsTable();
+}
+
+function changeClientsPerPage() {
+    clientsPerPage = parseInt(document.getElementById('clientsPerPageSelect').value);
+    currentClientPage = 1; // Resetear a primera página
+    updateClientsTable();
+}
+
+function goToClientPage(page) {
+    currentClientPage = page;
+    updateClientsTable();
+}
+
+function updateClientsTable() {
+    const tableContainer = document.getElementById('clientsTableContainer');
+    const paginationContainer = document.getElementById('clientsPagination');
+    
+    if (tableContainer) {
+        tableContainer.innerHTML = renderClientsTable();
+    }
+    
+    if (paginationContainer) {
+        paginationContainer.innerHTML = renderClientsPagination();
+    }
+}
+
+
+
+// Contenido de Historia Clínica
+function getHistoriaClinicaContent() {
     return `
         <div class="section active">
-            <h2>Fichas de Mascotas</h2>
-            <p>Selecciona el tipo de búsqueda y encuentra la mascota que necesitas</p>
+            <h2>Historia Clínica Completa</h2>
+            <p>Busca y visualiza toda la información médica de mascotas y clientes</p>
             
-            <div class="fichas-search">
+            <div class="historia-clinica-search">
                 <div class="search-options">
                     <label>
-                        <input type="radio" name="searchType" value="pet" checked onchange="updateSearchPlaceholder()">
+                        <input type="radio" name="historiaSearchType" value="pet" checked onchange="updateHistoriaSearchPlaceholder()">
                         Buscar por mascota
                     </label>
                     <label>
-                        <input type="radio" name="searchType" value="owner" onchange="updateSearchPlaceholder()">
+                        <input type="radio" name="historiaSearchType" value="owner" onchange="updateHistoriaSearchPlaceholder()">
                         Buscar por propietario
                     </label>
                 </div>
                 <div class="search-container-large">
-                    <input type="text" id="petSearchInput" placeholder="Buscar por nombre de mascota..." oninput="filterPetList()">
+                    <input type="text" id="historiaSearchInput" placeholder="Buscar por nombre de mascota..." oninput="searchPetsForHistoria()">
                     <i class="fas fa-search"></i>
                 </div>
             </div>
             
-            <div id="petFilesResults" class="pet-files-results">
-                <h3>Todas las Mascotas:</h3>
-                <div id="petListContainer" class="pet-list-container">
-                    <!-- Lista de mascotas se cargará aquí -->
+            <div id="historiaResults" class="historia-results">
+                <div id="historiaSearchResults" style="display: none;">
+                    <h3>Resultados de búsqueda:</h3>
+                    <div id="historiaSearchResultsContainer" class="pet-list-container">
+                        <!-- Resultados de búsqueda se cargarán aquí -->
+                    </div>
                 </div>
-                <p class="no-results-fichas" style="display: none;">No se encontraron mascotas que coincidan con la búsqueda.</p>
+                <div id="allPetsHistoriaSection">
+                    <h3>Todas las Mascotas:</h3>
+                    <div id="petHistoriaListContainer" class="pet-list-container">
+                        <div class="loading-message">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            Cargando mascotas...
+                        </div>
+                    </div>
+                </div>
+                <p class="no-results-historia" style="display: none;">No se encontraron mascotas que coincidan con la búsqueda.</p>
+            </div>
+            
+            <div id="historiaClinicaDetails" class="historia-clinica-details" style="display: none;">
+                <!-- Aquí se mostrará la historia clínica completa -->
             </div>
         </div>
     `;
 }
+
+// Variables globales para datos migrados (ya definidas arriba)
+// let migratedPatients = []; - Ahora es variable global
+// let migratedClients = []; - Por definir si es necesaria
 
 // Función para actualizar el placeholder del buscador
 function updateSearchPlaceholder() {
@@ -627,63 +1075,1110 @@ function updateSearchPlaceholder() {
     
     // Limpiar búsqueda actual y mostrar todas las mascotas
     searchInput.value = '';
-    showAllPetsInSearch();
+    showAllMigratedPets();
 }
 
-// Función para filtrar la lista de mascotas al escribir en el buscador
-function filterPetList() {
-    const searchTerm = document.getElementById('petSearchInput').value.toLowerCase();
-    const searchType = document.querySelector('input[name="searchType"]:checked').value;
-    const petCards = document.querySelectorAll('.pet-list-container .pet-card');
-    let foundResults = false;
-
-    petCards.forEach(card => {
-        const petName = card.dataset.petName.toLowerCase();
-        const ownerName = card.dataset.ownerName.toLowerCase();
-        
-        let matches = false;
-        if (searchType === 'pet') {
-            matches = petName.includes(searchTerm);
-        } else {
-            matches = ownerName.includes(searchTerm);
-        }
-        
-        if (matches) {
-            card.style.display = 'block';
-            foundResults = true;
-        } else {
-            card.style.display = 'none';
-        }
-    });
-
-    document.querySelector('.no-results-fichas').style.display = foundResults || searchTerm === '' ? 'none' : 'block';
-}
-
-// Función para mostrar todas las mascotas al hacer foco en el input de búsqueda
-function showAllPetsInSearch() {
-    const petListContainer = document.getElementById('petListContainer');
-    if (!petListContainer) return;
+// Función para actualizar el placeholder del buscador de historia clínica
+function updateHistoriaSearchPlaceholder() {
+    const searchType = document.querySelector('input[name="historiaSearchType"]:checked').value;
+    const searchInput = document.getElementById('historiaSearchInput');
     
-    petListContainer.innerHTML = pets.map(pet => `
-        <div class="pet-card" data-pet-id="${pet.id}" data-pet-name="${pet.name}" data-owner-name="${pet.client_name || ''}" onclick="displayPetFicha(${pet.id})">
-            <h4>${pet.name}</h4>
-            <p><strong>Propietario:</strong> ${pet.client_name || 'N/A'}</p>
-            <p><strong>Especie:</strong> ${pet.species || 'Desconocida'}</p>
-            <p><strong>Raza:</strong> ${pet.breed || 'Desconocida'}</p>
-            <p><strong>Edad:</strong> ${pet.age !== null ? pet.age : 'N/A'} ${pet.age !== null ? 'años' : ''}</p>
+    if (searchType === 'pet') {
+        searchInput.placeholder = 'Buscar por nombre de mascota...';
+    } else {
+        searchInput.placeholder = 'Buscar por nombre del propietario...';
+    }
+    
+    // Limpiar búsqueda actual y mostrar todas las mascotas
+    searchInput.value = '';
+    showAllPetsInHistoriaClinica();
+}
+
+
+
+// Función para buscar mascotas para historia clínica
+async function searchPetsForHistoria() {
+    console.log('🔍 searchPetsForHistoria iniciada');
+    
+    const searchInput = document.getElementById('historiaSearchInput');
+    const searchTypeRadio = document.querySelector('input[name="historiaSearchType"]:checked');
+    
+    if (!searchInput) {
+        console.error('❌ Input de búsqueda no encontrado');
+        return;
+    }
+    
+    if (!searchTypeRadio) {
+        console.error('❌ Tipo de búsqueda no encontrado');
+        return;
+    }
+    
+    const searchTerm = searchInput.value.trim();
+    const searchType = searchTypeRadio.value;
+    
+    console.log(`🔍 Término: "${searchTerm}", Tipo: ${searchType}`);
+    
+    if (searchTerm.length === 0) {
+        console.log('📝 Búsqueda vacía, mostrando todas las mascotas');
+        // Si no hay término de búsqueda, mostrar todas las mascotas
+        document.getElementById('historiaSearchResults').style.display = 'none';
+        document.getElementById('allPetsHistoriaSection').style.display = 'block';
+        return;
+    }
+    
+    if (searchTerm.length < 2) {
+        console.log('📝 Término muy corto, esperando más caracteres');
+        // Esperar al menos 2 caracteres para buscar
+        return;
+    }
+    
+    try {
+        console.log(`🔍 Buscando: "${searchTerm}" por ${searchType}`);
+        
+        const results = await api.searchMigratedPatients(searchTerm, searchType);
+        
+        console.log('📋 Resultados de búsqueda para historia clínica:', results.length, 'encontrados');
+        console.log('📋 Datos:', results);
+        
+        // Mostrar resultados de búsqueda
+        document.getElementById('allPetsHistoriaSection').style.display = 'none';
+        document.getElementById('historiaSearchResults').style.display = 'block';
+        
+        const searchResultsContainer = document.getElementById('historiaSearchResultsContainer');
+        const noResultsMessage = document.querySelector('.no-results-historia');
+        
+        if (results.length === 0) {
+            console.log('❌ No se encontraron resultados');
+            searchResultsContainer.innerHTML = '';
+            noResultsMessage.style.display = 'block';
+        } else {
+            console.log('✅ Mostrando', results.length, 'resultados');
+            noResultsMessage.style.display = 'none';
+            searchResultsContainer.innerHTML = results.map(patient => createPatientCardForHistoria(patient)).join('');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error al buscar mascotas para historia clínica:', error);
+        document.getElementById('historiaSearchResultsContainer').innerHTML = '<p class="error-message">Error al buscar mascotas. Por favor, intenta nuevamente.</p>';
+    }
+}
+
+// Función para mostrar todas las mascotas migradas
+async function showAllMigratedPets() {
+    console.log('🔍 showAllMigratedPets iniciada');
+    
+    const petListContainer = document.getElementById('petListContainer');
+    if (!petListContainer) {
+        console.error('❌ Container petListContainer no encontrado');
+        return;
+    }
+
+    try {
+        // Cargar datos si no están cargados
+        if (migratedPatients.length === 0) {
+            console.log('🔄 Cargando pacientes migrados...');
+            petListContainer.innerHTML = '<div class="loading-message"><i class="fas fa-spinner fa-spin"></i> Cargando mascotas...</div>';
+            migratedPatients = await api.getMigratedPatients();
+            console.log('📋 Pacientes migrados cargados:', migratedPatients.length);
+        } else {
+            console.log('📋 Usando pacientes ya cargados:', migratedPatients.length);
+        }
+        
+        // Mostrar todas las mascotas
+        console.log('🎨 Generando HTML para', migratedPatients.length, 'pacientes');
+        petListContainer.innerHTML = migratedPatients.map(patient => createPatientCard(patient)).join('');
+        
+        // Asegurar que la sección de todas las mascotas esté visible
+        const searchResults = document.getElementById('searchResults');
+        const allPetsSection = document.getElementById('allPetsSection');
+        const noResults = document.querySelector('.no-results-fichas');
+        const petFilesResults = document.getElementById('petFilesResults');
+        
+        if (searchResults) searchResults.style.display = 'none';
+        if (allPetsSection) allPetsSection.style.display = 'block';
+        if (noResults) noResults.style.display = 'none';
+        if (petFilesResults) petFilesResults.innerHTML = '';
+        
+        console.log('✅ showAllMigratedPets completada exitosamente');
+        
+    } catch (error) {
+        console.error('❌ Error al cargar mascotas migradas:', error);
+        petListContainer.innerHTML = `
+            <div class="error-message">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Error al cargar mascotas</h3>
+                <p>${error.message || 'Error de conexión con el servidor'}</p>
+                <button class="btn btn-primary" onclick="showAllMigratedPets()">
+                    <i class="fas fa-refresh"></i> Reintentar
+                </button>
+            </div>
+        `;
+    }
+}
+
+// Función para mostrar todas las mascotas en la sección de historia clínica
+async function showAllPetsInHistoriaClinica() {
+    console.log('🔍 showAllPetsInHistoriaClinica iniciada');
+    
+    // Ejecutar diagnóstico
+    await diagnosticVolverALista();
+    
+    const petHistoriaListContainer = document.getElementById('petHistoriaListContainer');
+    if (!petHistoriaListContainer) {
+        console.error('❌ Container petHistoriaListContainer no encontrado');
+        console.log('📋 Elementos disponibles con ID que contienen "pet":', 
+            Array.from(document.querySelectorAll('[id*="pet"]')).map(el => el.id));
+        throw new Error('Contenedor de mascotas no encontrado');
+    }
+
+    try {
+        // Mostrar indicador de carga
+        console.log('🔄 Limpiando contenedor y mostrando indicador de carga...');
+        petHistoriaListContainer.innerHTML = '<div class="loading-message"><i class="fas fa-spinner fa-spin"></i> Cargando mascotas...</div>';
+        console.log('🔄 Indicador de carga insertado:', petHistoriaListContainer.innerHTML);
+        
+        // Cargar datos si no están cargados
+        if (migratedPatients.length === 0) {
+            console.log('🔄 Cargando pacientes migrados desde API...');
+            migratedPatients = await api.getMigratedPatients();
+            console.log('📋 Pacientes migrados cargados:', migratedPatients.length);
+        } else {
+            console.log('📋 Usando pacientes ya cargados:', migratedPatients.length);
+        }
+        
+        // Verificar si hay datos
+        if (!migratedPatients || migratedPatients.length === 0) {
+            console.log('⚠️ No hay pacientes migrados disponibles');
+            petHistoriaListContainer.innerHTML = `
+                <div class="no-data-message">
+                    <i class="fas fa-info-circle"></i>
+                    <h3>No hay mascotas disponibles</h3>
+                    <p>No se encontraron registros de mascotas en el sistema.</p>
+                    <button class="btn btn-primary" onclick="showAllPetsInHistoriaClinica()">
+                        <i class="fas fa-refresh"></i> Recargar
+                    </button>
+                </div>
+            `;
+        } else {
+            // Mostrar todas las mascotas
+            console.log('🎨 Generando HTML para', migratedPatients.length, 'pacientes');
+            console.log('🔍 Primer paciente de muestra:', migratedPatients[0]);
+            
+            try {
+                const patientsHTML = migratedPatients.map((patient, index) => {
+                    try {
+                        return createPatientCardForHistoria(patient);
+                    } catch (cardError) {
+                        console.error(`❌ Error al crear tarjeta para paciente ${index}:`, cardError, patient);
+                        return `<div class="error-card">Error al mostrar paciente ${patient.id || index}</div>`;
+                    }
+                }).join('');
+                
+                petHistoriaListContainer.innerHTML = patientsHTML;
+                
+                // Forzar estilos para asegurar visibilidad
+                petHistoriaListContainer.style.display = 'grid';
+                petHistoriaListContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(300px, 1fr))';
+                petHistoriaListContainer.style.gap = '20px';
+                petHistoriaListContainer.style.padding = '20px';
+                petHistoriaListContainer.style.minHeight = '200px';
+                petHistoriaListContainer.style.width = '100%';
+                
+                console.log('✅ HTML generado exitosamente, longitud:', patientsHTML.length);
+                console.log('🔍 Contenido insertado en container:', petHistoriaListContainer.innerHTML.substring(0, 300));
+                console.log('🔍 Container visible?', petHistoriaListContainer.offsetHeight > 0);
+                console.log('🔍 Container dimensions:', {
+                    width: petHistoriaListContainer.offsetWidth,
+                    height: petHistoriaListContainer.offsetHeight,
+                    display: getComputedStyle(petHistoriaListContainer).display,
+                    visibility: getComputedStyle(petHistoriaListContainer).visibility
+                });
+                
+                // Verificar después de aplicar estilos
+                setTimeout(() => {
+                    console.log('🔍 Container dimensions DESPUÉS de timeout:', {
+                        width: petHistoriaListContainer.offsetWidth,
+                        height: petHistoriaListContainer.offsetHeight,
+                        visible: petHistoriaListContainer.offsetHeight > 0
+                    });
+                }, 100);
+            } catch (htmlError) {
+                console.error('❌ Error al generar HTML de pacientes:', htmlError);
+                throw new Error('Error al generar la lista de mascotas');
+            }
+        }
+        
+        // Asegurar que la sección de todas las mascotas esté visible
+        const searchResults = document.getElementById('historiaSearchResults');
+        const allPetsSection = document.getElementById('allPetsHistoriaSection');
+        const noResults = document.querySelector('.no-results-historia');
+        const historiaDetails = document.getElementById('historiaClinicaDetails');
+        const historiaResults = document.getElementById('historiaResults');
+        
+        console.log('🎨 Verificando visibilidad de elementos...');
+        console.log('- searchResults display:', searchResults?.style.display || 'default');
+        console.log('- allPetsSection display:', allPetsSection?.style.display || 'default');
+        console.log('- historiaDetails display:', historiaDetails?.style.display || 'default');
+        console.log('- historiaResults display:', historiaResults?.style.display || 'default');
+        
+        if (searchResults) {
+            searchResults.style.display = 'none';
+            console.log('✅ Ocultando searchResults');
+        }
+        if (allPetsSection) {
+            allPetsSection.style.display = 'block';
+            allPetsSection.style.visibility = 'visible';
+            console.log('✅ Mostrando allPetsSection');
+        }
+        if (noResults) {
+            noResults.style.display = 'none';
+            console.log('✅ Ocultando noResults');
+        }
+        if (historiaDetails) {
+            historiaDetails.style.display = 'none';
+            historiaDetails.style.visibility = 'hidden';
+            historiaDetails.style.opacity = '0';
+            historiaDetails.style.position = 'absolute';
+            historiaDetails.style.left = '-9999px';
+            console.log('✅ Ocultando historiaDetails AGRESIVAMENTE');
+        }
+        if (historiaResults) {
+            historiaResults.style.display = 'block';
+            historiaResults.style.visibility = 'visible';
+            historiaResults.style.opacity = '1';
+            historiaResults.style.minHeight = '200px'; // Forzar altura mínima
+            console.log('✅ Mostrando historiaResults');
+            console.log('🔍 historiaResults después de forzar:', {
+                display: historiaResults.style.display,
+                visibility: historiaResults.style.visibility,
+                height: historiaResults.offsetHeight,
+                width: historiaResults.offsetWidth
+            });
+        }
+        
+        console.log('✅ showAllPetsInHistoriaClinica completada exitosamente');
+        
+    } catch (error) {
+        console.error('❌ Error al cargar mascotas migradas:', error);
+        petHistoriaListContainer.innerHTML = `
+            <div class="error-message">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Error al cargar mascotas</h3>
+                <p>${error.message || 'Error de conexión con el servidor'}</p>
+                <button class="btn btn-primary" onclick="showAllPetsInHistoriaClinica()">
+                    <i class="fas fa-refresh"></i> Reintentar
+                </button>
+            </div>
+        `;
+        throw error; // Re-lanzar el error para que lo maneje el setTimeout
+    }
+}
+
+// Función para mostrar la historia clínica completa de un paciente
+async function displayHistoriaClinica(patientId) {
+    try {
+        console.log(`🔍 Cargando historia clínica completa del paciente ID: ${patientId}`);
+        
+        // Ocultar la lista de mascotas y mostrar el indicador de carga
+        console.log('🔄 Ocultando lista y mostrando detalles...');
+        document.getElementById('historiaResults').style.display = 'none';
+        const detailsContainer = document.getElementById('historiaClinicaDetails');
+        
+        // Anular los estilos agresivos de ocultación
+        detailsContainer.style.display = 'block';
+        detailsContainer.style.visibility = 'visible';
+        detailsContainer.style.opacity = '1';
+        detailsContainer.style.position = 'static';
+        detailsContainer.style.left = 'auto';
+        detailsContainer.style.width = '100%';
+        detailsContainer.style.height = 'auto';
+        
+        console.log('🔄 Elementos de vista configurados:', {
+            historiaResults: document.getElementById('historiaResults').style.display,
+            historiaDetails: detailsContainer.style.display,
+            detailsVisible: detailsContainer.offsetHeight > 0
+        });
+        
+        detailsContainer.innerHTML = `
+            <div class="loading-message">
+                <i class="fas fa-spinner fa-spin"></i>
+                Cargando historia clínica completa...
+            </div>
+        `;
+        
+        // Obtener todos los datos del paciente
+        const patientData = await api.getPatientHistory(patientId);
+        console.log('📋 Datos completos del paciente:', patientData);
+        console.log('📋 History length:', patientData.history ? patientData.history.length : 'undefined');
+        console.log('📋 Vaccines length:', patientData.vaccines ? patientData.vaccines.length : 'undefined');
+        console.log('📋 Studies length:', patientData.studies ? patientData.studies.length : 'undefined');
+        console.log('📋 Hemograms length:', patientData.hemograms ? patientData.hemograms.length : 'undefined');
+        
+        // Obtener datos adicionales que no están en el endpoint principal
+        const [ecografias, orina, quimicaSang, rayos, electrocardio] = await Promise.all([
+            api.getPatientEcografias(patientId).catch(() => []),
+            api.getPatientOrina(patientId).catch(() => []),
+            api.getPatientQuimicaSang(patientId).catch(() => []),
+            api.getPatientRayos(patientId).catch(() => []),
+            api.getPatientElectrocardio(patientId).catch(() => [])
+        ]);
+        
+        // Combinar todos los datos
+        const completeData = {
+            ...patientData,
+            ecografias,
+            orina,
+            quimicaSang,
+            rayos,
+            electrocardio
+        };
+        
+        // Mostrar la historia clínica completa
+        displayCompleteHistoriaClinica(completeData);
+        
+    } catch (error) {
+        console.error('❌ Error al cargar historia clínica:', error);
+        document.getElementById('historiaClinicaDetails').innerHTML = `
+            <div class="error-message">
+                <i class="fas fa-exclamation-triangle"></i>
+                Error al cargar la historia clínica. Por favor, intenta nuevamente.
+                <br><br>
+                <button class="btn btn-primary" onclick="showAllPetsInHistoriaClinica()">
+                    <i class="fas fa-arrow-left"></i> Volver a la lista
+                </button>
+            </div>
+        `;
+         }
+}
+
+// Función para mostrar la historia clínica completa formateada
+function displayCompleteHistoriaClinica(data) {
+    const { patient, history, vaccines, studies, hemograms, ecografias, orina, quimicaSang, rayos, electrocardio } = data;
+    
+    // Información del propietario
+    const ownerName = patient.clienteNombre && patient.clienteApellido 
+        ? `${patient.clienteNombre} ${patient.clienteApellido}`.trim()
+        : patient.clienteRazonSocial || 'N/A';
+    
+    const ownerInfo = `
+        <div class="owner-info">
+            <h4><i class="fas fa-user"></i> Información del Propietario</h4>
+            <p><strong>Nombre:</strong> ${ownerName}</p>
+            <p><strong>Teléfono:</strong> ${patient.clienteTelefono || 'N/A'}</p>
+            <p><strong>Email:</strong> ${patient.clienteEmail || 'N/A'}</p>
+            <p><strong>Dirección:</strong> ${patient.clienteDomicilio || 'N/A'}</p>
+        </div>
+    `;
+    
+    // Información del paciente
+    const patientInfo = `
+        <div class="patient-info">
+            <h4><i class="fas fa-paw"></i> Información del Paciente</h4>
+            <p><strong>Nombre:</strong> ${patient.nombre || 'Sin nombre'}</p>
+            <p><strong>Especie:</strong> ${patient.especie || 'No especificada'}</p>
+            <p><strong>Raza:</strong> ${patient.raza || 'No especificada'}</p>
+            <p><strong>Sexo:</strong> ${patient.sexo || 'N/A'}</p>
+            <p><strong>Color:</strong> ${patient.color || 'N/A'}</p>
+            <p><strong>Fecha de Nacimiento:</strong> ${patient.fechaNacimiento || 'N/A'}</p>
+        </div>
+    `;
+    
+    // Generar secciones de estudios médicos
+    const historiaClinicaSection = generateHistoriaSection(history);
+    const vacunasSection = generateVacunasSection(vaccines);
+    const estudiosSection = generateEstudiosSection(studies);
+    const hemogramasSection = generateHemogramasSection(hemograms);
+    const ecografiasSection = generateEcografiasSection(ecografias || []);
+    const orinaSection = generateOrinaSection(orina || []);
+    const quimicaSangSection = generateQuimicaSangSection(quimicaSang || []);
+    const rayosSection = generateRayosSection(rayos || []);
+    const electrocardiogramaSection = generateElectrocardiogramaSection(electrocardio || []);
+    
+    // HTML completo
+    const htmlContent = `
+        <div class="historia-clinica-complete">
+            <div class="historia-header">
+                <h2>
+                    <i class="fas fa-file-medical-alt"></i> 
+                    Historia Clínica Completa: ${patient.nombre || 'Sin nombre'}
+                </h2>
+                <button class="btn btn-primary" onclick="showAllPetsInHistoriaClinica()">
+                    <i class="fas fa-arrow-left"></i> Volver a la lista
+                </button>
+            </div>
+            
+            <div class="historia-content">
+                <div class="info-grid">
+                    ${patientInfo}
+                    ${ownerInfo}
+                </div>
+                
+                <div class="info-note">
+                    <p><i class="fas fa-info-circle"></i> <strong>Nota:</strong> Algunos campos pueden mostrar "N/A" cuando la información no fue registrada en el sistema original. Esto es normal en registros médicos históricos.</p>
+                </div>
+                
+                <div class="medical-sections">
+                    ${historiaClinicaSection}
+                    ${vacunasSection}
+                    ${estudiosSection}
+                    ${hemogramasSection}
+                    ${ecografiasSection}
+                    ${orinaSection}
+                    ${quimicaSangSection}
+                    ${rayosSection}
+                    ${electrocardiogramaSection}
+                </div>
+            </div>
+        </div>
+    `;
+    
+    const detailsContainer = document.getElementById('historiaClinicaDetails');
+    
+    // Asegurar que el contenedor sea visible
+    detailsContainer.style.display = 'block';
+    detailsContainer.style.visibility = 'visible';
+    detailsContainer.style.opacity = '1';
+    detailsContainer.style.position = 'static';
+    detailsContainer.style.left = 'auto';
+    detailsContainer.style.width = '100%';
+    detailsContainer.style.height = 'auto';
+    
+    detailsContainer.innerHTML = htmlContent;
+    
+    console.log('✅ Historia clínica completa mostrada, dimensiones:', {
+        width: detailsContainer.offsetWidth,
+        height: detailsContainer.offsetHeight,
+        visible: detailsContainer.offsetHeight > 0
+    });
+}
+
+// Funciones auxiliares para generar secciones de la historia clínica
+
+function generateHistoriaSection(history) {
+    if (!history || history.length === 0) {
+        return `
+            <div class="medical-section historia">
+                <h3><i class="fas fa-notes-medical"></i> Historia Clínica</h3>
+                <p class="no-data">No hay registros de historia clínica disponibles.</p>
+            </div>
+        `;
+    }
+    
+    const historyItems = history.map(item => `
+        <div class="history-item">
+            <div class="history-date">
+                <i class="fas fa-calendar-alt"></i>
+                ${formatDate(item.fecha)}
+            </div>
+            <div class="history-content">
+                <h4>${item.titulo || 'Sin título'}</h4>
+                <p><strong>Doctor:</strong> ${item.doctor || 'N/A'}</p>
+                <p><strong>Peso:</strong> ${item.peso || 'N/A'}</p>
+                <p><strong>Temperatura:</strong> ${item.temperatura || 'N/A'}</p>
+                <div class="history-details">
+                    ${item.detalle || 'Sin detalles'}
+                </div>
+            </div>
         </div>
     `).join('');
-    filterPetList(); // Aplicar filtro si ya hay texto
+    
+    return `
+        <div class="medical-section historia">
+            <h3><i class="fas fa-notes-medical"></i> Historia Clínica (${history.length})</h3>
+            <div class="history-timeline">
+                ${historyItems}
+            </div>
+        </div>
+    `;
 }
 
-// Listener para cuando se carga la sección de fichas
-document.addEventListener('DOMContentLoaded', () => {
-    // Asegurarse de que esta lógica solo se ejecuta cuando la sección de fichas está activa
-    // Esto puede requerir un mecanismo más robusto si las secciones se recargan dinámicamente
-    if (document.getElementById('petSearchInput')) {
-        showAllPetsInSearch();
+function generateVacunasSection(vaccines) {
+    if (!vaccines || vaccines.length === 0) {
+        return `
+            <div class="medical-section vacunas">
+                <h3><i class="fas fa-syringe"></i> Vacunas</h3>
+                <p class="no-data">No hay registros de vacunas disponibles.</p>
+            </div>
+        `;
     }
-});
+    
+    const vaccineItems = vaccines.map(vaccine => `
+        <div class="vaccine-item">
+            <div class="vaccine-date">
+                <i class="fas fa-calendar-alt"></i>
+                ${formatDate(vaccine.fechaVisita)}
+            </div>
+            <div class="vaccine-content">
+                <h4>${vaccine.clase && vaccine.clase.trim() !== '' ? vaccine.clase : 'Vacuna'}</h4>
+                <p><strong>Marca:</strong> ${vaccine.marca && vaccine.marca.trim() !== '' ? vaccine.marca : 'N/A'}</p>
+                <p><strong>Doctor:</strong> ${vaccine.doctor && vaccine.doctor.trim() !== '' ? vaccine.doctor : 'N/A'}</p>
+                <p><strong>Precio:</strong> ${vaccine.precio && vaccine.precio.trim() !== '' ? vaccine.precio : 'N/A'}</p>
+                ${vaccine.fechaProxima && vaccine.fechaProxima.trim() !== '' ? `<p><strong>Próxima dosis:</strong> ${formatDate(vaccine.fechaProxima)}</p>` : '<p><strong>Próxima dosis:</strong> N/A</p>'}
+            </div>
+        </div>
+    `).join('');
+    
+    return `
+        <div class="medical-section vacunas">
+            <h3><i class="fas fa-syringe"></i> Vacunas (${vaccines.length})</h3>
+            <div class="vaccines-timeline">
+                ${vaccineItems}
+            </div>
+        </div>
+    `;
+}
+
+function generateEstudiosSection(studies) {
+    if (!studies || studies.length === 0) {
+        return `
+            <div class="medical-section estudios">
+                <h3><i class="fas fa-flask"></i> Estudios</h3>
+                <p class="no-data">No hay estudios disponibles.</p>
+            </div>
+        `;
+    }
+    
+    const studyItems = studies.map(study => `
+        <div class="study-item">
+            <div class="study-date">
+                <i class="fas fa-calendar-alt"></i>
+                ${formatDate(study.fecha)}
+            </div>
+            <div class="study-content">
+                <h4>${study.titulo || 'Estudio'}</h4>
+                <p><strong>Doctor:</strong> ${study.doctor || 'N/A'}</p>
+                <div class="study-details">
+                    ${study.detalle || 'Sin detalles'}
+                </div>
+            </div>
+        </div>
+    `).join('');
+    
+    return `
+        <div class="medical-section estudios">
+            <h3><i class="fas fa-flask"></i> Estudios (${studies.length})</h3>
+            <div class="studies-timeline">
+                ${studyItems}
+            </div>
+        </div>
+    `;
+}
+
+function generateHemogramasSection(hemograms) {
+    if (!hemograms || hemograms.length === 0) {
+        return `
+            <div class="medical-section hemogramas">
+                <h3><i class="fas fa-tint"></i> Hemogramas</h3>
+                <p class="no-data">No hay hemogramas disponibles.</p>
+            </div>
+        `;
+    }
+    
+    // Debug: mostrar los datos reales de hemogramas
+    console.log('🔍 Datos de hemogramas recibidos:', hemograms);
+    if (hemograms.length > 0) {
+        console.log('🔍 Primer hemograma:', hemograms[0]);
+        console.log('🔍 Campos del primer hemograma:', Object.keys(hemograms[0]));
+    }
+    
+    const hemogramItems = hemograms.map((hemogram, index) => {
+        // Debug específico para cada hemograma
+        console.log(`🔍 Hemograma ${index + 1}:`, {
+            fecha: hemogram.fecha,
+            hematies: `"${hemogram.hematies}" (tipo: ${typeof hemogram.hematies})`,
+            hemoglobina: `"${hemogram.hemoglobina}" (tipo: ${typeof hemogram.hemoglobina})`,
+            hematocritos: `"${hemogram.hematocritos}" (tipo: ${typeof hemogram.hematocritos})`,
+            leucocitos: `"${hemogram.leucocitos}" (tipo: ${typeof hemogram.leucocitos})`,
+            observaciones: `"${hemogram.observaciones}" (tipo: ${typeof hemogram.observaciones})`
+        });
+        
+        return `
+        <div class="hemogram-item">
+            <div class="hemogram-date">
+                <i class="fas fa-calendar-alt"></i>
+                ${formatDate(hemogram.fecha)}
+            </div>
+            <div class="hemogram-content">
+                <h4>Hemograma</h4>
+                <p><strong>Doctor:</strong> ${hemogram.doctor || 'N/A'}</p>
+                <div class="hemogram-values">
+                    <div class="value-row">
+                        <span><strong>Hematíes:</strong> ${formatValue(hemogram.hematies)}</span>
+                        <span><strong>Hemoglobina:</strong> ${formatValue(hemogram.hemoglobina)}</span>
+                    </div>
+                    <div class="value-row">
+                        <span><strong>Hematocrito:</strong> ${formatValue(hemogram.hematocritos)}</span>
+                        <span><strong>Leucocitos:</strong> ${formatValue(hemogram.leucocitos)}</span>
+                    </div>
+                    <p><strong>Observaciones:</strong> ${formatValue(hemogram.observaciones)}</p>
+                </div>
+            </div>
+        </div>
+    `;
+    }).join('');
+    
+    return `
+        <div class="medical-section hemogramas">
+            <h3><i class="fas fa-tint"></i> Hemogramas (${hemograms.length})</h3>
+            <div class="hemograms-timeline">
+                ${hemogramItems}
+            </div>
+        </div>
+    `;
+}
+
+// Funciones auxiliares para otras secciones (placeholder por ahora)
+function generateEcografiasSection(ecografias) {
+    if (!ecografias || ecografias.length === 0) {
+        return `
+            <div class="medical-section ecografias">
+                <h3><i class="fas fa-heartbeat ecografias"></i> Ecografías</h3>
+                <p class="no-data">No hay ecografías disponibles.</p>
+            </div>
+        `;
+    }
+    
+    const ecografiaItems = ecografias.map(eco => `
+        <div class="ecografia-item">
+            <div class="ecografia-date">
+                <i class="fas fa-calendar-alt"></i>
+                ${formatDate(eco.fecha)}
+            </div>
+            <div class="ecografia-content">
+                <h4>${eco.titulo || 'Ecografía'}</h4>
+                <p><strong>Doctor:</strong> ${eco.doctor || 'N/A'}</p>
+                <div class="ecografia-details">
+                    ${eco.detalle || 'Sin detalles'}
+                </div>
+            </div>
+        </div>
+    `).join('');
+    
+    return `
+        <div class="medical-section ecografias">
+            <h3><i class="fas fa-heartbeat ecografias"></i> Ecografías (${ecografias.length})</h3>
+            <div class="ecografias-timeline">
+                ${ecografiaItems}
+            </div>
+        </div>
+    `;
+}
+
+function generateOrinaSection(orina) {
+    if (!orina || orina.length === 0) {
+        return `
+            <div class="medical-section orina">
+                <h3><i class="fas fa-vial orina"></i> Análisis de Orina</h3>
+                <p class="no-data">No hay análisis de orina disponibles.</p>
+            </div>
+        `;
+    }
+    
+    const orinaItems = orina.map(analisis => `
+        <div class="orina-item">
+            <div class="orina-date">
+                <i class="fas fa-calendar-alt"></i>
+                ${formatDate(analisis.fecha)}
+            </div>
+            <div class="orina-content">
+                <h4>Análisis de Orina</h4>
+                <p><strong>Doctor:</strong> ${analisis.doctor || 'N/A'}</p>
+                <div class="orina-values">
+                    <div class="value-row">
+                        <span><strong>Densidad:</strong> ${analisis.densidad || 'N/A'}</span>
+                        <span><strong>pH:</strong> ${analisis.ph || 'N/A'}</span>
+                    </div>
+                    <div class="value-row">
+                        <span><strong>Proteínas:</strong> ${analisis.proteinas || 'N/A'}</span>
+                        <span><strong>Glucosa:</strong> ${analisis.glucosa || 'N/A'}</span>
+                    </div>
+                    <div class="value-row">
+                        <span><strong>Cetonas:</strong> ${analisis.cetonas || 'N/A'}</span>
+                        <span><strong>Sangre:</strong> ${analisis.sangre || 'N/A'}</span>
+                    </div>
+                    <div class="value-row">
+                        <span><strong>Leucocitos:</strong> ${analisis.leucocitos || 'N/A'}</span>
+                        <span><strong>Nitritos:</strong> ${analisis.nitritos || 'N/A'}</span>
+                    </div>
+                    ${analisis.observaciones ? `<p><strong>Observaciones:</strong> ${analisis.observaciones}</p>` : ''}
+                </div>
+            </div>
+        </div>
+    `).join('');
+    
+    return `
+        <div class="medical-section orina">
+            <h3><i class="fas fa-vial orina"></i> Análisis de Orina (${orina.length})</h3>
+            <div class="orina-timeline">
+                ${orinaItems}
+            </div>
+        </div>
+    `;
+}
+
+function generateQuimicaSangSection(quimicaSang) {
+    if (!quimicaSang || quimicaSang.length === 0) {
+        return `
+            <div class="medical-section quimica-sang">
+                <h3><i class="fas fa-flask quimica-sang"></i> Química Sanguínea</h3>
+                <p class="no-data">No hay análisis de química sanguínea disponibles.</p>
+            </div>
+        `;
+    }
+    
+    const quimicaItems = quimicaSang.map(analisis => `
+        <div class="quimica-item">
+            <div class="quimica-date">
+                <i class="fas fa-calendar-alt"></i>
+                ${formatDate(analisis.fecha)}
+            </div>
+            <div class="quimica-content">
+                <h4>Química Sanguínea</h4>
+                <p><strong>Doctor:</strong> ${analisis.doctor || 'N/A'}</p>
+                <div class="quimica-values">
+                    <div class="value-row">
+                        <span><strong>Glucosa:</strong> ${analisis.glucosa || 'N/A'}</span>
+                        <span><strong>Urea:</strong> ${analisis.urea || 'N/A'}</span>
+                    </div>
+                    <div class="value-row">
+                        <span><strong>Creatinina:</strong> ${analisis.creatinina || 'N/A'}</span>
+                        <span><strong>Colesterol:</strong> ${analisis.colesterol || 'N/A'}</span>
+                    </div>
+                    <div class="value-row">
+                        <span><strong>Triglicéridos:</strong> ${analisis.trigliceridos || 'N/A'}</span>
+                    </div>
+                    ${analisis.observaciones ? `<p><strong>Observaciones:</strong> ${analisis.observaciones}</p>` : ''}
+                </div>
+            </div>
+        </div>
+    `).join('');
+    
+    return `
+        <div class="medical-section quimica-sang">
+            <h3><i class="fas fa-flask quimica-sang"></i> Química Sanguínea (${quimicaSang.length})</h3>
+            <div class="quimica-timeline">
+                ${quimicaItems}
+            </div>
+        </div>
+    `;
+}
+
+function generateRayosSection(rayos) {
+    if (!rayos || rayos.length === 0) {
+        return `
+            <div class="medical-section rayos">
+                <h3><i class="fas fa-x-ray rayos"></i> Rayos X</h3>
+                <p class="no-data">No hay rayos X disponibles.</p>
+            </div>
+        `;
+    }
+    
+    const rayosItems = rayos.map(rayo => `
+        <div class="rayos-item">
+            <div class="rayos-date">
+                <i class="fas fa-calendar-alt"></i>
+                ${formatDate(rayo.fecha)}
+            </div>
+            <div class="rayos-content">
+                <h4>${rayo.titulo || 'Rayos X'}</h4>
+                <p><strong>Doctor:</strong> ${rayo.doctor || 'N/A'}</p>
+                <div class="rayos-details">
+                    ${rayo.detalle || 'Sin detalles'}
+                </div>
+            </div>
+        </div>
+    `).join('');
+    
+    return `
+        <div class="medical-section rayos">
+            <h3><i class="fas fa-x-ray rayos"></i> Rayos X (${rayos.length})</h3>
+            <div class="rayos-timeline">
+                ${rayosItems}
+            </div>
+        </div>
+    `;
+}
+
+function generateElectrocardiogramaSection(electrocardio) {
+    if (!electrocardio || electrocardio.length === 0) {
+        return `
+            <div class="medical-section electrocardio">
+                <h3><i class="fas fa-heartbeat electrocardio"></i> Electrocardiograma</h3>
+                <p class="no-data">No hay electrocardiogramas disponibles.</p>
+            </div>
+        `;
+    }
+    
+    const electroItems = electrocardio.map(electro => `
+        <div class="electro-item">
+            <div class="electro-date">
+                <i class="fas fa-calendar-alt"></i>
+                ${formatDate(electro.fecha)}
+            </div>
+            <div class="electro-content">
+                <h4>${electro.titulo || 'Electrocardiograma'}</h4>
+                <p><strong>Doctor:</strong> ${electro.doctor || 'N/A'}</p>
+                <div class="electro-details">
+                    ${electro.detalle || 'Sin detalles'}
+                </div>
+            </div>
+        </div>
+    `).join('');
+    
+    return `
+        <div class="medical-section electrocardio">
+            <h3><i class="fas fa-heartbeat electrocardio"></i> Electrocardiograma (${electrocardio.length})</h3>
+            <div class="electro-timeline">
+                ${electroItems}
+            </div>
+        </div>
+    `;
+}
+
+// Función auxiliar para formatear fechas
+function formatDate(dateString) {
+    if (!dateString) return 'N/A';
+    
+    try {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('es-AR', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    } catch (error) {
+        return dateString;
+    }
+}
+
+// Función auxiliar para manejar valores vacíos
+function formatValue(value, defaultValue = 'N/A') {
+    // Verificar si el valor es null, undefined, o vacío
+    if (value === null || value === undefined) {
+        return defaultValue;
+    }
+    
+    // Si es string, limpiar espacios y verificar si está vacío
+    if (typeof value === 'string') {
+        const trimmedValue = value.trim();
+        if (trimmedValue === '' || trimmedValue === 'null' || trimmedValue === 'undefined') {
+            return defaultValue;
+        }
+        return trimmedValue;
+    }
+    
+    // Para números, verificar si es 0 (que podría ser válido) o NaN
+    if (typeof value === 'number') {
+        if (isNaN(value)) {
+            return defaultValue;
+        }
+        return value;
+    }
+    
+    return value;
+}
+
+
+
+// Función para crear una tarjeta de paciente (general)
+function createPatientCard(patient) {
+    const clienteName = patient.clienteNombre && patient.clienteApellido 
+        ? `${patient.clienteNombre} ${patient.clienteApellido}`.toTitleCase()
+        : patient.clienteRazonSocial || 'Cliente no especificado';
+        
+    const petName = patient.nombre ? patient.nombre.toTitleCase() : 'Sin nombre';
+    const breed = patient.raza ? patient.raza.toTitleCase() : 'N/A';
+    
+    return `
+        <div class="patient-card">
+            <div class="patient-info">
+                <h3>${petName}</h3>
+                <p><strong>Especie:</strong> ${patient.especie || 'N/A'}</p>
+                <p><strong>Raza:</strong> ${breed}</p>
+                <p><strong>Propietario:</strong> ${clienteName}</p>
+            </div>
+            <div class="patient-actions">
+                <button class="btn btn-primary" onclick="showPatientFile(${patient.id})">
+                    <i class="fas fa-folder-open"></i>
+                    <span>Ver Ficha Completa</span>
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+// Función para crear una tarjeta de paciente para historia clínica
+function createPatientCardForHistoria(patient) {
+    const clientName = patient.clienteNombre && patient.clienteApellido 
+        ? `${patient.clienteNombre} ${patient.clienteApellido}`.trim()
+        : patient.clienteRazonSocial || 'N/A';
+    
+    return `
+        <div class="pet-card" data-pet-id="${patient.id}" onclick="displayHistoriaClinica(${patient.id})">
+            <h4>${patient.nombre || 'Sin nombre'} <span class="pet-id">(ID: ${patient.id})</span></h4>
+            <p><strong>Propietario:</strong> ${clientName}</p>
+            <p><strong>Especie:</strong> ${patient.especie || 'Desconocida'}</p>
+            <p><strong>Raza:</strong> ${patient.raza || 'Desconocida'}</p>
+            <p><strong>Sexo:</strong> ${patient.sexo || 'N/A'}</p>
+            <p><strong>Color:</strong> ${patient.color || 'N/A'}</p>
+            <div class="historia-clinica-indicator">
+                <i class="fas fa-file-medical-alt"></i>
+                <span>Ver Historia Clínica Completa</span>
+            </div>
+        </div>
+    `;
+}
+
+// Función para mostrar la ficha completa de un paciente migrado
+async function displayMigratedPatientFicha(patientId) {
+    try {
+        console.log(`🔍 Cargando ficha del paciente ID: ${patientId}`);
+        
+        const patientData = await api.getPatientHistory(patientId);
+        console.log('📋 Datos del paciente:', patientData);
+        
+        const { patient, history, vaccines, studies, hemograms } = patientData;
+        
+        // Crear información del propietario
+        const ownerName = patient.clienteNombre && patient.clienteApellido 
+            ? `${patient.clienteNombre} ${patient.clienteApellido}`.trim()
+            : patient.clienteRazonSocial || 'N/A';
+        
+        // Crear sección de información básica
+        const basicInfoHTML = `
+            <div class="patient-basic-info">
+                <h3>Información Básica</h3>
+                <div class="info-grid">
+                    <div><strong>Nombre:</strong> ${patient.nombre || 'Sin nombre'}</div>
+                    <div><strong>Propietario:</strong> ${ownerName}</div>
+                    <div><strong>Especie:</strong> ${patient.especie || 'Desconocida'}</div>
+                    <div><strong>Raza:</strong> ${patient.raza || 'Desconocida'}</div>
+                    <div><strong>Sexo:</strong> ${patient.sexo || 'N/A'}</div>
+                    <div><strong>Color:</strong> ${patient.color || 'N/A'}</div>
+                    <div><strong>Peso:</strong> ${patient.peso || 'N/A'}</div>
+                    <div><strong>Fecha de nacimiento:</strong> ${patient.fechaNacimiento || 'N/A'}</div>
+                </div>
+                <div class="contact-info">
+                    <h4>Información de contacto del propietario:</h4>
+                    <div><strong>Teléfono:</strong> ${patient.clienteTelefono || 'N/A'}</div>
+                    <div><strong>Email:</strong> ${patient.clienteEmail || 'N/A'}</div>
+                    <div><strong>Domicilio:</strong> ${patient.clienteDomicilio || 'N/A'}</div>
+                </div>
+            </div>
+        `;
+        
+        // Crear sección de historial médico
+        const historyHTML = history.length > 0 ? `
+            <div class="medical-history">
+                <h3>Historial Médico</h3>
+                ${history.map(record => `
+                    <div class="medical-record">
+                        <div class="record-header">
+                            <strong>Fecha:</strong> ${record.fecha || 'N/A'}
+                            ${record.doctor ? `<span class="doctor">Dr. ${record.doctor}</span>` : ''}
+                        </div>
+                        <div class="record-content">
+                            ${record.titulo ? `<h4>${record.titulo}</h4>` : ''}
+                            ${record.peso ? `<p><strong>Peso:</strong> ${record.peso}</p>` : ''}
+                            ${record.temperatura ? `<p><strong>Temperatura:</strong> ${record.temperatura}</p>` : ''}
+                            ${record.detalle ? `<p><strong>Detalle:</strong> ${record.detalle}</p>` : ''}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        ` : '<div class="no-records"><h3>Historial Médico</h3><p>No hay registros médicos disponibles.</p></div>';
+        
+        // Crear sección de vacunas
+        const vaccinesHTML = vaccines.length > 0 ? `
+            <div class="vaccines-history">
+                <h3>Historial de Vacunas</h3>
+                <div class="vaccines-grid">
+                    ${vaccines.map(vaccine => `
+                        <div class="vaccine-record">
+                            <div><strong>Fecha:</strong> ${vaccine.fechaVisita || 'N/A'}</div>
+                            <div><strong>Próxima:</strong> ${vaccine.fechaProxima || 'N/A'}</div>
+                            <div><strong>Marca:</strong> ${vaccine.marca || 'N/A'}</div>
+                            <div><strong>Clase:</strong> ${vaccine.clase || 'N/A'}</div>
+                            <div><strong>Precio:</strong> ${vaccine.precio ? `$${vaccine.precio}` : 'N/A'}</div>
+                            ${vaccine.doctor ? `<div><strong>Doctor:</strong> Dr. ${vaccine.doctor}</div>` : ''}
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        ` : '<div class="no-records"><h3>Historial de Vacunas</h3><p>No hay registros de vacunas disponibles.</p></div>';
+        
+        // Crear sección de estudios
+        const studiesHTML = studies.length > 0 ? `
+            <div class="studies-history">
+                <h3>Estudios Realizados</h3>
+                ${studies.map(study => `
+                    <div class="study-record">
+                        <div class="study-header">
+                            <strong>Fecha:</strong> ${study.fecha || 'N/A'}
+                            ${study.doctor ? `<span class="doctor">Dr. ${study.doctor}</span>` : ''}
+                        </div>
+                        <div class="study-content">
+                            ${study.titulo ? `<h4>${study.titulo}</h4>` : ''}
+                            ${study.detalle ? `<p>${study.detalle}</p>` : ''}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        ` : '<div class="no-records"><h3>Estudios Realizados</h3><p>No hay estudios disponibles.</p></div>';
+        
+        // Crear sección de hemogramas
+        const hemogramsHTML = hemograms.length > 0 ? `
+            <div class="hemograms-history">
+                <h3>Hemogramas</h3>
+                ${hemograms.map(hemo => `
+                    <div class="hemogram-record">
+                        <div class="hemogram-header">
+                            <strong>Fecha:</strong> ${hemo.fecha || 'N/A'}
+                            ${hemo.doctor ? `<span class="doctor">Dr. ${hemo.doctor}</span>` : ''}
+                        </div>
+                        <div class="hemogram-values">
+                            ${hemo.hematies ? `<div><strong>Hematíes:</strong> ${hemo.hematies}</div>` : ''}
+                            ${hemo.hemoglobina ? `<div><strong>Hemoglobina:</strong> ${hemo.hemoglobina}</div>` : ''}
+                            ${hemo.hematocritos ? `<div><strong>Hematocritos:</strong> ${hemo.hematocritos}</div>` : ''}
+                            ${hemo.leucocitos ? `<div><strong>Leucocitos:</strong> ${hemo.leucocitos}</div>` : ''}
+                            ${hemo.observaciones ? `<div><strong>Observaciones:</strong> ${hemo.observaciones}</div>` : ''}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        ` : '<div class="no-records"><h3>Hemogramas</h3><p>No hay hemogramas disponibles.</p></div>';
+        
+        // Mostrar toda la información en la ficha
+        const fichaContent = `
+            <div class="patient-ficha-complete">
+                <div class="ficha-header">
+                    <h2>Ficha Completa - ${patient.nombre || 'Sin nombre'}</h2>
+                    <button class="btn btn-secondary" onclick="showAllMigratedPets()">
+                        <i class="fas fa-arrow-left"></i> Volver a la lista
+                    </button>
+                </div>
+                
+                ${basicInfoHTML}
+                ${historyHTML}
+                ${vaccinesHTML}
+                ${studiesHTML}
+                ${hemogramsHTML}
+            </div>
+        `;
+        
+        document.getElementById('petFilesResults').innerHTML = fichaContent;
+        
+    } catch (error) {
+        console.error('Error al cargar ficha del paciente:', error);
+        document.getElementById('petFilesResults').innerHTML = `
+            <div class="error-message">
+                <h3>Error al cargar la ficha</h3>
+                <p>No se pudo cargar la información del paciente. Por favor, intenta nuevamente.</p>
+                <button class="btn btn-primary" onclick="showAllMigratedPets()">Volver a la lista</button>
+            </div>
+        `;
+    }
+}
 
 // Función para mostrar la ficha completa de una mascota
 function displayPetFicha(petId) {
@@ -754,7 +2249,7 @@ function displayPetFicha(petId) {
             
             <div class="pet-info-section">
                 <div id="petInfoView-${petId}" class="pet-info-view">
-                    <p><strong>Propietario:</strong> ${pet.client_name || 'N/A'}</p>
+                    <p><strong>Propietario:</strong> ${pet.clientName || 'N/A'}</p>
                     <p><strong>Especie:</strong> ${pet.species || 'Desconocida'}</p>
                     <p><strong>Raza:</strong> ${pet.breed || 'Desconocida'}</p>
                     <p><strong>Edad:</strong> ${pet.age !== null ? pet.age : 'N/A'} ${pet.age !== null ? 'años' : ''}</p>
@@ -765,7 +2260,7 @@ function displayPetFicha(petId) {
                         <label><strong>Propietario:</strong></label>
                         <select id="editOwner-${petId}">
                             ${clients.map(client => `
-                                <option value="${client.id}" ${client.id === pet.client_id ? 'selected' : ''}>
+                                <option value="${client.id}" ${client.id === pet.clientId ? 'selected' : ''}>
                                     ${client.name}
                                 </option>
                             `).join('')}
@@ -935,7 +2430,7 @@ function displayPetFicha(petId) {
             
             <div class="pet-info-section">
                 <div id="petInfoView-${petId}" class="pet-info-view">
-                    <p><strong>Propietario:</strong> ${pet.client_name || 'N/A'}</p>
+                    <p><strong>Propietario:</strong> ${pet.clientName || 'N/A'}</p>
                     <p><strong>Especie:</strong> ${pet.species || 'Desconocida'}</p>
                     <p><strong>Raza:</strong> ${pet.breed || 'Desconocida'}</p>
                     <p><strong>Edad:</strong> ${pet.age !== null ? pet.age : 'N/A'} ${pet.age !== null ? 'años' : ''}</p>
@@ -946,7 +2441,7 @@ function displayPetFicha(petId) {
                         <label><strong>Propietario:</strong></label>
                         <select id="editOwner-${petId}">
                             ${clients.map(client => `
-                                <option value="${client.id}" ${client.id === pet.client_id ? 'selected' : ''}>
+                                <option value="${client.id}" ${client.id === pet.clientId ? 'selected' : ''}>
                                     ${client.name}
                                 </option>
                             `).join('')}
@@ -984,8 +2479,12 @@ function displayPetFicha(petId) {
     document.getElementById('petFilesResults').innerHTML = fichaContent;
 }
 
+
 // Contenido de Comunicación
 function getCommunicationContent() {
+    // Inicializar comunicaciones filtradas
+    filteredCommunications = communications;
+    
     return `
         <div class="section active">
             <h2>Comunicación con Clientes</h2>
@@ -1008,46 +2507,169 @@ function getCommunicationContent() {
                 </div>
             </div>
             
-            <div class="form-row">
-                <div class="form-group">
-                    <button class="btn btn-primary" onclick="showEmailModal()">
-                        <i class="fas fa-envelope"></i>
-                        Enviar Email
-                    </button>
+            <div class="communication-actions">
+                <button class="btn btn-primary btn-large" onclick="showEmailModal()">
+                    <i class="fas fa-envelope"></i>
+                    Enviar Email
+                </button>
+                <button class="btn btn-primary btn-large" onclick="showSMSModal()">
+                    <i class="fas fa-sms"></i>
+                    Enviar SMS
+                </button>
+            </div>
+            
+            <div class="communications-controls">
+                <div class="search-controls">
+                    <input type="text" id="communicationSearch" placeholder="Buscar comunicaciones..." 
+                           oninput="searchCommunications()" class="search-input">
+                    <i class="fas fa-search search-icon"></i>
                 </div>
-                <div class="form-group">
-                    <button class="btn btn-primary" onclick="showSMSModal()">
-                        <i class="fas fa-sms"></i>
-                        Enviar SMS
-                    </button>
+                <div class="pagination-controls">
+                    <label>Mostrar:</label>
+                    <select id="communicationsPerPage" onchange="changeCommunicationsPerPage()">
+                        <option value="10">10 por página</option>
+                        <option value="25">25 por página</option>
+                        <option value="50">50 por página</option>
+                    </select>
                 </div>
             </div>
             
             <h3>Historial de Comunicaciones</h3>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Fecha</th>
-                        <th>Cliente</th>
-                        <th>Tipo</th>
-                        <th>Asunto</th>
-                        <th>Estado</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${communications.map(comm => `
-                        <tr>
-                            <td>${comm.sent_at ? new Date(comm.sent_at).toLocaleDateString() : 'N/A'}</td>
-                            <td>${comm.client_name || 'Cliente desconocido'}</td>
-                            <td>${comm.type.toUpperCase()}</td>
-                            <td>${comm.subject}</td>
-                            <td class="status-good">Enviado</td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
+            <div id="communicationsTableContainer">
+                <!-- La tabla se renderizará aquí -->
+            </div>
+            
+            <div id="communicationsPagination">
+                <!-- La paginación se renderizará aquí -->
+            </div>
         </div>
     `;
+}
+
+
+// Funciones de paginación para comunicaciones
+function renderCommunicationsTable() {
+    const startIndex = (currentCommunicationPage - 1) * communicationsPerPage;
+    const endIndex = startIndex + communicationsPerPage;
+    const paginatedCommunications = filteredCommunications.slice(startIndex, endIndex);
+    
+    const tableHTML = `
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Cliente</th>
+                    <th>Tipo</th>
+                    <th>Asunto</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${paginatedCommunications.map(comm => `
+                    <tr>
+                        <td>${comm.sentAt ? formatDateInArgentina(comm.sentAt) : 'N/A'}</td>
+                        <td>${comm.clientName || 'Cliente desconocido'}</td>
+                        <td><span class="badge badge-${comm.type === 'email' ? 'primary' : 'info'}">${comm.type.toUpperCase()}</span></td>
+                        <td>${comm.subject || 'Sin asunto'}</td>
+                        <td><span class="badge badge-success">Enviado</span></td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+    
+    document.getElementById('communicationsTableContainer').innerHTML = tableHTML;
+}
+
+function renderCommunicationsPagination() {
+    const totalPages = Math.ceil(filteredCommunications.length / communicationsPerPage);
+    const startIndex = (currentCommunicationPage - 1) * communicationsPerPage + 1;
+    const endIndex = Math.min(startIndex + communicationsPerPage - 1, filteredCommunications.length);
+    
+    let paginationHTML = `
+        <div class="pagination-info">
+            Mostrando ${startIndex}-${endIndex} de ${filteredCommunications.length} comunicaciones
+        </div>
+        <div class="pagination-controls">
+    `;
+    
+    // Botón anterior
+    if (currentCommunicationPage > 1) {
+        paginationHTML += `
+            <button class="btn btn-secondary" onclick="goToCommunicationPage(${currentCommunicationPage - 1})">
+                <i class="fas fa-chevron-left"></i> Anterior
+            </button>
+        `;
+    }
+    
+    // Números de página
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, currentCommunicationPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    
+    if (endPage - startPage + 1 < maxVisiblePages) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+        paginationHTML += `
+            <button class="btn ${i === currentCommunicationPage ? 'btn-primary' : 'btn-secondary'}" 
+                    onclick="goToCommunicationPage(${i})">
+                ${i}
+            </button>
+        `;
+    }
+    
+    // Botón siguiente
+    if (currentCommunicationPage < totalPages) {
+        paginationHTML += `
+            <button class="btn btn-secondary" onclick="goToCommunicationPage(${currentCommunicationPage + 1})">
+                Siguiente <i class="fas fa-chevron-right"></i>
+            </button>
+        `;
+    }
+    
+    paginationHTML += `</div>`;
+    
+    document.getElementById('communicationsPagination').innerHTML = paginationHTML;
+}
+
+function searchCommunications() {
+    const searchTerm = document.getElementById('communicationSearch').value.toLowerCase();
+    
+    if (searchTerm === '') {
+        filteredCommunications = communications;
+    } else {
+        filteredCommunications = communications.filter(comm => {
+            const clientName = (comm.clientName || '').toLowerCase();
+            const subject = (comm.subject || '').toLowerCase();
+            const type = comm.type.toLowerCase();
+            
+            return clientName.includes(searchTerm) || 
+                   subject.includes(searchTerm) || 
+                   type.includes(searchTerm);
+        });
+    }
+    
+    currentCommunicationPage = 1;
+    updateCommunicationsTable();
+}
+
+function changeCommunicationsPerPage() {
+    const select = document.getElementById('communicationsPerPage');
+    communicationsPerPage = parseInt(select.value);
+    currentCommunicationPage = 1;
+    updateCommunicationsTable();
+}
+
+function goToCommunicationPage(page) {
+    currentCommunicationPage = page;
+    updateCommunicationsTable();
+}
+
+function updateCommunicationsTable() {
+    renderCommunicationsTable();
+    renderCommunicationsPagination();
 }
 
 // Contenido del Calendario
@@ -1070,6 +2692,9 @@ function getCalendarContent() {
                 </button>
                 <button class="btn btn-success" onclick="navigateToToday()" style="margin-left: 10px;">
                     <i class="fas fa-calendar-day"></i> Hoy
+                </button>
+                <button class="btn btn-info" onclick="navigateToJuly2025()" style="margin-left: 5px;">
+                    <i class="fas fa-calendar-alt"></i> Jul 2025
                 </button>
 
 
@@ -1170,9 +2795,51 @@ function generateCalendarGrid(month, year) {
 function normalizeDate(dateValue) {
     if (!dateValue) return null;
     
+    // Si es un objeto complejo (como los que vienen de la API), extraer el valor real
+    if (typeof dateValue === 'object' && dateValue !== null && !(dateValue instanceof Date)) {
+        // Intentar extraer el valor real del objeto
+        let extractedValue = null;
+        
+        // Buscar propiedades comunes que podrían contener la fecha (tanto camelCase como snake_case)
+        if (dateValue.valor !== undefined) {
+            extractedValue = dateValue.valor;
+        } else if (dateValue.value !== undefined) {
+            extractedValue = dateValue.value;
+        } else if (dateValue.date !== undefined) {
+            extractedValue = dateValue.date;
+        } else if (dateValue.createdAt !== undefined) {
+            extractedValue = dateValue.createdAt;
+        } else if (dateValue.created_at !== undefined) {
+            extractedValue = dateValue.created_at;
+        } else if (dateValue.updatedAt !== undefined) {
+            extractedValue = dateValue.updatedAt;
+        } else if (dateValue.updated_at !== undefined) {
+            extractedValue = dateValue.updated_at;
+        } else if (dateValue.nextAppointment !== undefined) {
+            extractedValue = dateValue.nextAppointment;
+        } else if (dateValue.next_appointment !== undefined) {
+            extractedValue = dateValue.next_appointment;
+        } else if (dateValue.valueOf && typeof dateValue.valueOf === 'function') {
+            extractedValue = dateValue.valueOf();
+        } else {
+            // Si no encontramos un valor específico, intentar convertir el objeto completo
+            extractedValue = String(dateValue);
+        }
+        
+        // Recursivamente normalizar el valor extraído
+        if (extractedValue !== null && extractedValue !== undefined) {
+            return normalizeDate(extractedValue);
+        }
+    }
+    
     // Si es una cadena, limpiar espacios y caracteres extraños
     if (typeof dateValue === 'string') {
         dateValue = dateValue.trim();
+        
+        // Si está vacío o es "null", devolver null
+        if (!dateValue || dateValue === 'null' || dateValue === 'undefined' || dateValue === '[object Object]') {
+            return null;
+        }
         
         // Si ya está en formato YYYY-MM-DD, devolverlo
         if (/^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
@@ -1217,8 +2884,8 @@ function getEventsForDate(date) {
         
         console.log(`📋 Registro ${index + 1}:`, {
             id: record.id,
-            pet: record.pet_name || record.petName,
-            owner: record.client_name || record.owner,
+            pet: record.petName || record.pet_name,
+            owner: record.clientName || record.client_name || record.owner,
             date: record.date,
             normalizedDate: normalizedDate,
             nextAppointment: nextAppointment,
@@ -1233,10 +2900,10 @@ function getEventsForDate(date) {
             console.log(`✅ Encontrada cita para ${dateStr}:`, record);
             events.push({
                 type: 'appointment',
-                title: `Cita: ${record.pet_name || record.petName}`,
+                title: `Cita: ${record.petName || record.pet_name}`,
                 time: '10:00', // Hora por defecto
-                client: record.client_name || record.owner,
-                pet: record.pet_name || record.petName,
+                client: record.clientName || record.client_name || record.owner,
+                pet: record.petName || record.pet_name,
                 diagnosis: record.diagnosis
             });
         }
@@ -1246,10 +2913,10 @@ function getEventsForDate(date) {
             console.log(`✅ Encontrada consulta para ${dateStr}:`, record);
             events.push({
                 type: 'medical-record',
-                title: `Consulta: ${record.pet_name || record.petName}`,
+                title: `Consulta: ${record.petName || record.pet_name}`,
                 time: '14:00', // Hora por defecto
-                client: record.client_name || record.owner,
-                pet: record.pet_name || record.petName,
+                client: record.clientName || record.client_name || record.owner,
+                pet: record.petName || record.pet_name,
                 diagnosis: record.diagnosis
             });
         }
@@ -1276,7 +2943,7 @@ function getUpcomingAppointments() {
         
         console.log(`📋 Registro ${index + 1} para próximas citas:`, {
             id: record.id,
-            pet: record.pet_name || record.petName,
+            pet: record.petName || record.pet_name,
             nextAppointment: nextAppointment,
             normalizedNext: normalizedNext
         });
@@ -1296,8 +2963,8 @@ function getUpcomingAppointments() {
                 upcomingAppointments.push({
                     date: appointmentDate,
                     dateStr: normalizedNext,
-                    pet: record.pet_name || record.petName,
-                    client: record.client_name || record.owner,
+                    pet: record.petName || record.pet_name,
+                    client: record.clientName || record.client_name || record.owner,
                     diagnosis: record.diagnosis,
                     recordId: record.id
                 });
@@ -1447,10 +3114,10 @@ function debugCalendarData() {
     recordsWithAppointments.forEach((record, index) => {
         console.log(`📋 Registro ${index + 1}:`, {
             id: record.id,
-            pet: record.pet_name || record.petName,
-            owner: record.client_name || record.owner,
+            pet: record.petName || record.pet_name,
+            owner: record.clientName || record.client_name || record.owner,
             date: record.date,
-            nextAppointment: record.next_appointment || record.nextAppointment,
+            nextAppointment: record.nextAppointment || record.next_appointment,
             diagnosis: record.diagnosis
         });
     });
@@ -1569,26 +3236,52 @@ function getSalesContent() {
         return saleDate.toDateString() === today.toDateString();
     }).length;
 
+    
     const salesHTML = sales.map(sale => {
-        const saleDate = new Date(sale.sale_date);
-        const formattedDate = saleDate.toLocaleDateString('es-ES', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+        // Mejorar el formateo de fechas
+        let formattedDate = 'Fecha inválida';
+        if (sale.saleDate || sale.sale_date) {
+            try {
+                const saleDate = new Date(sale.saleDate || sale.sale_date);
+                if (!isNaN(saleDate.getTime())) {
+                    formattedDate = formatDateInArgentina(saleDate) + ' ' + 
+                                  saleDate.toLocaleTimeString('es-AR', { 
+                                      hour: '2-digit', 
+                                      minute: '2-digit' 
+                                  });
+                }
+            } catch (e) {
+                formattedDate = 'Fecha inválida';
+            }
+        }
 
-        const itemsPreview = sale.items ? sale.items.slice(0, 2).map(item => item.product_name).join(', ') : 'Sin items';
-        const moreItems = sale.items && sale.items.length > 2 ? ` y ${sale.items.length - 2} más` : '';
+        // Mejorar el nombre del veterinario
+        const veterinarianName = sale.veterinarianName || sale.veterinarian_name || 'No especificado';
+        
+        // Mejorar el conteo de productos
+        const totalItems = sale.totalItems || sale.total_items || 0;
+        
+        // Mejorar la lista de items
+        let itemsPreview = 'Sin productos';
+        if (sale.items && Array.isArray(sale.items) && sale.items.length > 0) {
+            const validItems = sale.items.filter(item => item && item.productName);
+            if (validItems.length > 0) {
+                itemsPreview = validItems.slice(0, 2).map(item => 
+                    item.productName || item.product_name || 'Producto sin nombre'
+                ).join(', ');
+                if (validItems.length > 2) {
+                    itemsPreview += ` y ${validItems.length - 2} más`;
+                }
+            }
+        }
 
         return `
             <tr>
                 <td>${formattedDate}</td>
-                <td>${sale.veterinarian_name || 'No especificado'}</td>
-                <td>${sale.total_items || 0}</td>
-                <td>${itemsPreview}${moreItems}</td>
-                <td class="status-good">$${parseFloat(sale.total_amount || 0).toFixed(2)}</td>
+                <td>${veterinarianName}</td>
+                <td>${totalItems}</td>
+                <td>${itemsPreview}</td>
+                <td class="status-good">${parseFloat(sale.totalAmount || sale.total_amount || 0).toFixed(2)}</td>
                 <td>
                     <button class="btn btn-primary btn-sm" onclick="showSaleDetails(${sale.id})" title="Ver detalles">
                         <i class="fas fa-eye"></i>
@@ -2068,7 +3761,7 @@ function showAddRecordModal() {
                         <label>Nombre de la Mascota:</label>
                         <input type="text" id="petName" list="existingPets" required>
                         <datalist id="existingPets">
-                            ${pets.map(pet => `<option data-id="${pet.id}" value="${pet.name}">${pet.name} (${pet.species}) - ${pet.client_name || 'Sin propietario'}</option>`).join('')}
+                            ${pets.map(pet => `<option data-id="${pet.id}" value="${pet.name}">${pet.name} (${pet.species}) - ${pet.clientName || 'Sin propietario'}</option>`).join('')}
                         </datalist>
                     </div>
                     <div class="form-group">
@@ -2220,35 +3913,7 @@ function searchProducts() {
 let salesCart = [];
 
 // Función para manejar entrada de código de barras
-function handleBarcodeInput(event) {
-    if (event.key === 'Enter') {
-        event.preventDefault();
-        addToCart();
-    }
-}
-
-// Función para agregar producto al carrito por código de barras
-async function addToCart() {
-    const barcodeInput = document.getElementById('barcodeInput');
-    const barcode = barcodeInput.value.trim();
-    
-    if (!barcode) {
-        alert('Por favor, ingrese un código de barras');
-        return;
-    }
-    
-    try {
-        const product = await api.getProductByBarcode(barcode);
-        addProductToCart(product.id);
-        barcodeInput.value = '';
-    } catch (error) {
-        if (error.message.includes('Producto no encontrado')) {
-            alert('Producto no encontrado. Verifique el código de barras.');
-        } else {
-            alert('Error al buscar el producto: ' + error.message);
-        }
-    }
-}
+// Funciones de código de barras eliminadas
 
 // Función para agregar producto al carrito por ID
 function addProductToCart(productId) {
@@ -2280,7 +3945,6 @@ function addProductToCart(productId) {
             name: product.name,
             category: product.category,
             stock: product.stock,
-            barcode: product.barcode,
             quantity: 1,
             price: 0 // Se puede agregar precio más tarde
         });
@@ -2384,7 +4048,6 @@ function generateCartItemsHTML() {
         <tr>
             <td>
                 <strong>${item.name}</strong>
-                ${item.barcode ? `<br><small>Código: ${item.barcode}</small>` : ''}
             </td>
             <td>${item.category}</td>
             <td>${item.stock} unidades</td>
@@ -2571,23 +4234,9 @@ function showAddInventoryModal() {
                         <input type="number" id="stock" required>
                     </div>
                     <div class="form-group">
-                        <label>Stock Mínimo:</label>
-                        <input type="number" id="minStock" required>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
                         <label>Fecha de Vencimiento:</label>
                         <input type="date" id="expiryDate" required>
                     </div>
-                    <div class="form-group">
-                        <label>Proveedor:</label>
-                        <input type="text" id="supplier" required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Código de Barras:</label>
-                    <input type="text" id="barcode" placeholder="Opcional">
                 </div>
                 <button type="submit" class="btn btn-success">Agregar Producto</button>
             </form>
@@ -2604,10 +4253,7 @@ function showAddInventoryModal() {
             name: document.getElementById('productName').value,
             category: document.getElementById('category').value,
             stock: parseInt(document.getElementById('stock').value),
-            minStock: parseInt(document.getElementById('minStock').value),
-            expiryDate: document.getElementById('expiryDate').value,
-            supplier: document.getElementById('supplier').value,
-            barcode: document.getElementById('barcode').value || null
+            expiryDate: document.getElementById('expiryDate').value
         };
         
         try {
@@ -2888,7 +4534,7 @@ function showAddClientModal() {
             await api.createClient(newClient);
             await loadDataFromAPI(); // Recargar datos
             closeModal();
-            loadSection('clients');
+            loadSection('clients'); // Esto recargará la sección con paginación
         } catch (error) {
             alert('Error al agregar el cliente: ' + error.message);
         }
@@ -2900,7 +4546,17 @@ async function deleteClient(id) {
         try {
             await api.deleteClient(id);
             await loadDataFromAPI(); // Recargar datos
-            loadSection('clients');
+            
+            // Actualizar clientes filtrados y recargar tabla
+            filteredClients = [...clients];
+            
+            // Verificar si la página actual está vacía después de eliminar
+            const totalPages = Math.ceil(filteredClients.length / clientsPerPage);
+            if (currentClientPage > totalPages && totalPages > 0) {
+                currentClientPage = totalPages;
+            }
+            
+            updateClientsTable();
         } catch (error) {
             alert('Error al eliminar el cliente: ' + error.message);
         }
@@ -2988,7 +4644,7 @@ function editRecord(id) {
                         <label>Nombre de la Mascota:</label>
                         <input type="text" id="editPetName" list="existingPetsEdit" value="${record.pet_name || record.petName || ''}" required>
                         <datalist id="existingPetsEdit">
-                            ${pets.map(pet => `<option data-id="${pet.id}" value="${pet.name}">${pet.name} (${pet.species}) - ${pet.client_name || 'Sin propietario'}</option>`).join('')}
+                            ${pets.map(pet => `<option data-id="${pet.id}" value="${pet.name}">${pet.name} (${pet.species}) - ${pet.clientName || 'Sin propietario'}</option>`).join('')}
                         </datalist>
                     </div>
                     <div class="form-group">

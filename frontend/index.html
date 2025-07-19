@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CediapVet - Sistema de Gestión Veterinaria</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-form">
+            <div class="logo-section">
+                <i class="fas fa-heart"></i>
+                <h1>CediapVet</h1>
+                <p>Sistema de Gestión Veterinaria</p>
+            </div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Usuario:</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Contraseña:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                
+                <button type="submit" class="login-btn">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Iniciar Sesión
+                </button>
+                
+                <div id="error-message" class="error-message"></div>
+            </form>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="api.js"></script>
+    <script src="script.js"></script>
+    
+    <!-- Vercel Analytics -->
+    <script src="analytics.js"></script>
+
+    
+
+    <script>
+        // Debug de login mejorado - espera a que todo esté cargado
+        window.addEventListener('load', function() {
+            console.log('🔍 Página completamente cargada, verificando elementos...');
+            
+            // Esperar un poco más para asegurar que todos los scripts se cargaron
+            setTimeout(function() {
+                const loginForm = document.getElementById('loginForm');
+                const usernameInput = document.getElementById('username');
+                const passwordInput = document.getElementById('password');
+                const errorMessage = document.getElementById('error-message');
+                
+                console.log('📋 Elementos encontrados:');
+                console.log('- loginForm:', !!loginForm);
+                console.log('- usernameInput:', !!usernameInput);
+                console.log('- passwordInput:', !!passwordInput);
+                console.log('- errorMessage:', !!errorMessage);
+                console.log('- api:', typeof api);
+                console.log('- handleLogin:', typeof handleLogin);
+                console.log('- currentUser:', typeof currentUser);
+                console.log('- showDashboard:', typeof showDashboard);
+                
+                // Solo agregar listener adicional si handleLogin no está definido
+                if (loginForm && typeof handleLogin !== 'function') {
+                    console.log('⚠️ handleLogin no está definido, creando función de respaldo...');
+                    
+                    // Crear función de respaldo
+                    window.handleLoginBackup = async function(event) {
+                        console.log('🔄 handleLoginBackup ejecutándose...');
+                        event.preventDefault();
+                        
+                        const username = usernameInput.value;
+                        const password = passwordInput.value;
+                        const loginButton = document.querySelector('.login-btn');
+                        
+                        console.log('📝 Datos de login:', { username, password: '***' });
+                        
+                        if (!username || !password) {
+                            console.error('❌ Usuario o contraseña vacíos');
+                            errorMessage.textContent = 'Por favor, ingresa usuario y contraseña';
+                            errorMessage.style.display = 'block';
+                            return;
+                        }
+                        
+                        if (!api) {
+                            console.error('❌ API no está disponible');
+                            errorMessage.textContent = 'Error: API no disponible';
+                            errorMessage.style.display = 'block';
+                            return;
+                        }
+                        
+                        const buttonIcon = loginButton.querySelector('i');
+                        
+                        try {
+                            // Mostrar estado de carga
+                            loginButton.disabled = true;
+                            loginButton.classList.add('loading');
+                            buttonIcon.className = 'fas fa-spinner fa-spin';
+                            loginButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Iniciando sesión...';
+                            
+                            errorMessage.style.display = 'none';
+                            
+                            console.log('🔄 Enviando petición de login...');
+                            
+                            const response = await api.login(username, password);
+                            
+                            console.log('✅ Login exitoso:', response);
+                            
+                            // Guardar usuario
+                            window.currentUser = response.user;
+                            localStorage.setItem('currentUser', JSON.stringify(response.user));
+                            
+                            // Actualizar botón
+                            buttonIcon.className = 'fas fa-check';
+                            loginButton.innerHTML = '<i class="fas fa-check"></i> ¡Bienvenido!';
+                            
+                            // Mostrar dashboard
+                            console.log('🎯 Mostrando dashboard...');
+                            if (typeof showDashboard === 'function') {
+                                showDashboard();
+                            } else {
+                                // Crear dashboard básico si showDashboard no existe
+                                document.querySelector('.login-container').style.display = 'none';
+                                document.body.innerHTML += '<div style="padding: 20px; text-align: center;"><h1>¡Bienvenido!</h1><p>Login exitoso. Recarga la página para continuar.</p></div>';
+                            }
+                            
+                        } catch (error) {
+                            console.error('❌ Error en login:', error);
+                            
+                            // Restaurar botón
+                            loginButton.disabled = false;
+                            loginButton.classList.remove('loading');
+                            buttonIcon.className = 'fas fa-sign-in-alt';
+                            loginButton.innerHTML = '<i class="fas fa-sign-in-alt"></i> Iniciar Sesión';
+                            
+                            // Mostrar error
+                            errorMessage.textContent = error.message || 'Error al iniciar sesión';
+                            errorMessage.style.display = 'block';
+                        }
+                    };
+                    
+                    // Usar la función de respaldo
+                    loginForm.addEventListener('submit', window.handleLoginBackup);
+                    console.log('✅ Listener de respaldo agregado');
+                } else if (loginForm && typeof handleLogin === 'function') {
+                    console.log('✅ handleLogin está definido correctamente');
+                } else {
+                    console.error('❌ Formulario no encontrado');
+                }
+            }, 500); // Esperar 500ms para asegurar que todo esté cargado
+        });
+    </script>
+</body>
+</html> 

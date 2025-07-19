@@ -1,7 +1,7 @@
-// API Configuration
+// Frontend API Configuration for CediapVet
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://localhost:3000/api'
-    : 'https://cediapvet.vercel.app/api';
+    : '/api'; // In Vercel, use relative path to serverless functions
 
 // Token management
 let authToken = localStorage.getItem('authToken');
@@ -200,7 +200,7 @@ class CediapVetAPI {
             
             return result;
         } catch (error) {
-            console.error('❌ Error al actualizar registro médico:', error);
+            console.error('Error al actualizar registro médico:', error);
             throw error;
         }
     }
@@ -265,7 +265,7 @@ class CediapVetAPI {
             });
             return this.handleResponse(response);
         } catch (error) {
-            console.error('Error al buscar productos:', error);
+            console.error('Error al buscar en inventario:', error);
             throw error;
         }
     }
@@ -343,24 +343,9 @@ class CediapVetAPI {
                 headers: this.getHeaders(),
                 body: JSON.stringify(clientData)
             });
-            const result = await this.handleResponse(response);
-            
-            // Track client creation
-            trackAnalytics('client_created', {
-                clientName: clientData.name,
-                timestamp: new Date().toISOString()
-            });
-            
-            return result;
+            return this.handleResponse(response);
         } catch (error) {
             console.error('Error al crear cliente:', error);
-            
-            // Track error
-            trackAnalytics('client_creation_error', {
-                error: error.message,
-                timestamp: new Date().toISOString()
-            });
-            
             throw error;
         }
     }
@@ -388,14 +373,6 @@ class CediapVetAPI {
             return this.handleResponse(response);
         } catch (error) {
             console.error('Error al eliminar cliente:', error);
-            
-            // Si es un error de autenticación, limpiar tokens y redirigir al login
-            if (error.message.includes('autenticación') || error.message.includes('Token')) {
-                this.logout();
-                alert('Sesión expirada. Por favor, inicia sesión nuevamente.');
-                location.reload();
-            }
-            
             throw error;
         }
     }
@@ -436,7 +413,7 @@ class CediapVetAPI {
             });
             return this.handleResponse(response);
         } catch (error) {
-            console.error('Error al probar SMS:', error);
+            console.error('Error al enviar SMS de prueba:', error);
             throw error;
         }
     }
@@ -450,7 +427,7 @@ class CediapVetAPI {
             });
             return this.handleResponse(response);
         } catch (error) {
-            console.error('Error al probar Email:', error);
+            console.error('Error al enviar email de prueba:', error);
             throw error;
         }
     }
@@ -482,7 +459,7 @@ class CediapVetAPI {
         }
     }
 
-    // Sample data
+    // Sample Data
     async insertSampleData() {
         try {
             const response = await fetch(`${this.baseURL}/sample-data`, {
@@ -495,19 +472,185 @@ class CediapVetAPI {
             throw error;
         }
     }
+
+    // ========================================
+    // DATOS MIGRADOS (FICHAS)
+    // ========================================
+
+    // Obtener todos los clientes migrados
+    async getMigratedClients() {
+        try {
+            const response = await fetch(`${this.baseURL}/migrated/clients`, {
+                headers: this.getHeaders()
+            });
+            return this.handleResponse(response);
+        } catch (error) {
+            console.error('Error al obtener clientes migrados:', error);
+            throw error;
+        }
+    }
+
+    // Obtener todos los pacientes migrados
+    async getMigratedPatients() {
+        try {
+            console.log('🔄 API: Iniciando petición a /migrated/patients');
+            console.log('🔄 API: URL:', `${this.baseURL}/migrated/patients`);
+            console.log('🔄 API: Token:', this.token ? 'Presente' : 'Ausente');
+            
+            const headers = this.getHeaders();
+            console.log('🔄 API: Headers:', headers);
+            
+            // Crear un AbortController para timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => {
+                console.log('⏰ API: Timeout de 30 segundos alcanzado');
+                controller.abort();
+            }, 30000); // 30 segundos timeout
+            
+            const response = await fetch(`${this.baseURL}/migrated/patients`, {
+                headers: headers,
+                signal: controller.signal
+            });
+            
+            clearTimeout(timeoutId);
+            
+            console.log('🔄 API: Respuesta recibida');
+            console.log('🔄 API: Status:', response.status);
+            console.log('🔄 API: StatusText:', response.statusText);
+            console.log('🔄 API: OK:', response.ok);
+            
+            if (!response.ok) {
+                console.error('❌ API: Respuesta no OK');
+                const text = await response.text();
+                console.error('❌ API: Texto de respuesta:', text);
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const result = await response.json();
+            console.log('✅ API: Datos procesados exitosamente');
+            console.log('✅ API: Cantidad de registros:', result.length);
+            console.log('✅ API: Primeros 3 registros:', result.slice(0, 3));
+            
+            return result;
+        } catch (error) {
+            if (error.name === 'AbortError') {
+                console.error('❌ API: Petición cancelada por timeout');
+                throw new Error('La petición tardó demasiado tiempo. Por favor, verifica tu conexión.');
+            }
+            console.error('❌ API: Error al obtener pacientes migrados:', error);
+            console.error('❌ API: Stack trace:', error.stack);
+            throw error;
+        }
+    }
+
+    // Obtener historial completo de un paciente
+    async getPatientHistory(patientId) {
+        try {
+            const response = await fetch(`${this.baseURL}/migrated/patient/${patientId}/history`, {
+                headers: this.getHeaders()
+            });
+            return this.handleResponse(response);
+        } catch (error) {
+            console.error('Error al obtener historial del paciente:', error);
+            throw error;
+        }
+    }
+
+    // Buscar pacientes por nombre o propietario
+    async searchMigratedPatients(query, type = 'pet') {
+        try {
+            const response = await fetch(`${this.baseURL}/migrated/search?q=${encodeURIComponent(query)}&type=${type}`, {
+                headers: this.getHeaders()
+            });
+            return this.handleResponse(response);
+        } catch (error) {
+            console.error('Error al buscar pacientes migrados:', error);
+            throw error;
+        }
+    }
+
+    // Funciones adicionales para obtener datos específicos de estudios médicos
+    // (Estas funciones retornan arrays vacíos por ahora, pero están preparadas para futuros endpoints)
+    
+    async getPatientEcografias(patientId) {
+        try {
+            // Por ahora retornamos array vacío, pero se puede implementar endpoint específico
+            console.log(`🔄 Obteniendo ecografías para paciente ${patientId}`);
+            return [];
+        } catch (error) {
+            console.error('Error al obtener ecografías:', error);
+            return [];
+        }
+    }
+
+    async getPatientOrina(patientId) {
+        try {
+            // Por ahora retornamos array vacío, pero se puede implementar endpoint específico
+            console.log(`🔄 Obteniendo análisis de orina para paciente ${patientId}`);
+            return [];
+        } catch (error) {
+            console.error('Error al obtener análisis de orina:', error);
+            return [];
+        }
+    }
+
+    async getPatientQuimicaSang(patientId) {
+        try {
+            // Por ahora retornamos array vacío, pero se puede implementar endpoint específico
+            console.log(`🔄 Obteniendo química sanguínea para paciente ${patientId}`);
+            return [];
+        } catch (error) {
+            console.error('Error al obtener química sanguínea:', error);
+            return [];
+        }
+    }
+
+    async getPatientRayos(patientId) {
+        try {
+            // Por ahora retornamos array vacío, pero se puede implementar endpoint específico
+            console.log(`🔄 Obteniendo rayos X para paciente ${patientId}`);
+            return [];
+        } catch (error) {
+            console.error('Error al obtener rayos X:', error);
+            return [];
+        }
+    }
+
+    async getPatientElectrocardio(patientId) {
+        try {
+            // Por ahora retornamos array vacío, pero se puede implementar endpoint específico
+            console.log(`🔄 Obteniendo electrocardiograma para paciente ${patientId}`);
+            return [];
+        } catch (error) {
+            console.error('Error al obtener electrocardiograma:', error);
+            return [];
+        }
+    }
 }
 
 // Create global API instance
 const api = new CediapVetAPI();
 
-// Función para limpiar tokens expirados manualmente
+// Function to clear expired tokens
 function clearExpiredTokens() {
-    console.log('🧹 Limpiando tokens expirados...');
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('currentUser');
-    api.token = null;
-    console.log('✅ Tokens limpiados. Recarga la página para iniciar sesión.');
+    const token = localStorage.getItem('authToken');
+    if (token) {
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            const currentTime = Date.now() / 1000;
+            
+            if (payload.exp < currentTime) {
+                console.log('🔄 Token expirado, limpiando...');
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('currentUser');
+            }
+        } catch (error) {
+            console.warn('Error al verificar token:', error);
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('currentUser');
+        }
+    }
 }
 
-// Hacer la función disponible globalmente para debugging
-window.clearExpiredTokens = clearExpiredTokens; 
+// Clear expired tokens on page load
+clearExpiredTokens(); 

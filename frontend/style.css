@@ -140,16 +140,45 @@ body {
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.3s ease;
+    transition: all 0.3s ease;
     margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
 }
 
-.login-btn:hover {
+.login-btn:hover:not(:disabled) {
     background: #1e4082;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(44, 90, 160, 0.3);
+}
+
+.login-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
+.login-btn.loading {
+    background: var(--secondary-color);
+    animation: pulse 1.5s infinite;
 }
 
 .login-btn i {
     margin-right: 8px;
+}
+
+.login-btn .fa-spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.8; }
+    50% { opacity: 1; }
+    100% { opacity: 0.8; }
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 .error-message {
@@ -1668,6 +1697,337 @@ body {
     }
 }
 
+/* Estilos para Historia Clínica */
+.historia-clinica-search {
+    background: var(--white);
+    border: 2px solid #e1e8ed;
+    border-radius: var(--border-radius);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.historia-results {
+    background: var(--white);
+    border: 2px solid #e1e8ed;
+    border-radius: var(--border-radius);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.historia-clinica-details {
+    background: var(--white);
+    border: 2px solid #e1e8ed;
+    border-radius: var(--border-radius);
+    padding: 20px;
+}
+
+.historia-clinica-complete {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.historia-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #e1e8ed;
+}
+
+.historia-header h2 {
+    color: var(--primary-color);
+    font-size: 24px;
+    margin: 0;
+}
+
+.historia-content {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.patient-info, .owner-info {
+    background: var(--light-bg);
+    padding: 20px;
+    border-radius: var(--border-radius);
+    border-left: 4px solid var(--primary-color);
+}
+
+.patient-info h4, .owner-info h4 {
+    color: var(--primary-color);
+    margin-bottom: 15px;
+    font-size: 18px;
+}
+
+.patient-info p, .owner-info p {
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+.medical-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.medical-section {
+    background: var(--white);
+    border: 1px solid #e1e8ed;
+    border-radius: var(--border-radius);
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.medical-section h3 {
+    color: var(--primary-color);
+    margin-bottom: 20px;
+    font-size: 20px;
+    border-bottom: 2px solid var(--light-bg);
+    padding-bottom: 10px;
+}
+
+.medical-section h3 i {
+    margin-right: 10px;
+    color: var(--secondary-color);
+}
+
+/* Colores específicos para cada sección médica - Títulos completos */
+.medical-section.vacunas h3 {
+    color: #8e44ad !important; /* Violeta para vacunas */
+}
+
+.medical-section.hemogramas h3 {
+    color: #e74c3c !important; /* Rojo para hemogramas */
+}
+
+.medical-section.ecografias h3 {
+    color: #27ae60 !important; /* Verde para ecografías */
+}
+
+.medical-section.orina h3 {
+    color: #d68910 !important; /* Amarillo oscuro para análisis de orina */
+}
+
+.medical-section.estudios h3 {
+    color: #3498db !important; /* Azul para estudios generales */
+}
+
+.medical-section.quimica-sang h3 {
+    color: #922b21 !important; /* Bordo para química sanguínea */
+}
+
+.medical-section.rayos h3 {
+    color: #2c3e50 !important; /* Negro para rayos X */
+}
+
+.medical-section.electrocardio h3 {
+    color: #5dade2 !important; /* Celeste para electrocardiograma */
+}
+
+.medical-section.historia h3 {
+    color: #2c3e50 !important; /* Negro para historia clínica */
+}
+
+/* Mantener colores específicos para iconos también */
+.medical-section h3 i.fa-syringe {
+    color: #8e44ad !important; /* Violeta para vacunas */
+}
+
+.medical-section h3 i.fa-tint {
+    color: #e74c3c !important; /* Rojo para hemogramas */
+}
+
+.medical-section h3 i.fa-heartbeat {
+    color: #27ae60 !important; /* Verde para ecografías */
+}
+
+.medical-section h3 i.fa-vial {
+    color: #d68910 !important; /* Amarillo oscuro para análisis de orina */
+}
+
+.medical-section h3 i.fa-flask {
+    color: #3498db !important; /* Azul para estudios generales */
+}
+
+.medical-section h3 i.fa-flask.quimica-sang {
+    color: #922b21 !important; /* Bordo para química sanguínea */
+}
+
+.medical-section h3 i.fa-x-ray {
+    color: #2c3e50 !important; /* Negro para rayos X */
+}
+
+.medical-section h3 i.fa-heartbeat.electrocardio {
+    color: #5dade2 !important; /* Celeste para electrocardiograma */
+}
+
+.medical-section h3 i.fa-notes-medical {
+    color: #2c3e50 !important; /* Negro para historia clínica */
+}
+
+.no-data {
+    color: #666;
+    font-style: italic;
+    text-align: center;
+    padding: 20px;
+}
+
+.coming-soon {
+    color: var(--warning-color);
+    font-weight: 600;
+    text-align: center;
+    padding: 20px;
+}
+
+/* Timeline styles */
+.history-timeline, .vaccines-timeline, .studies-timeline, .hemograms-timeline,
+.ecografias-timeline, .orina-timeline, .quimica-timeline, .rayos-timeline, .electro-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.history-item, .vaccine-item, .study-item, .hemogram-item,
+.ecografia-item, .orina-item, .quimica-item, .rayos-item, .electro-item {
+    display: flex;
+    gap: 20px;
+    padding: 15px;
+    background: var(--light-bg);
+    border-radius: var(--border-radius);
+    border-left: 4px solid var(--secondary-color);
+}
+
+.history-date, .vaccine-date, .study-date, .hemogram-date,
+.ecografia-date, .orina-date, .quimica-date, .rayos-date, .electro-date {
+    flex-shrink: 0;
+    width: 120px;
+    font-weight: 600;
+    color: var(--primary-color);
+    font-size: 14px;
+}
+
+.history-date i, .vaccine-date i, .study-date i, .hemogram-date i,
+.ecografia-date i, .orina-date i, .quimica-date i, .rayos-date i, .electro-date i {
+    margin-right: 5px;
+}
+
+.history-content, .vaccine-content, .study-content, .hemogram-content,
+.ecografia-content, .orina-content, .quimica-content, .rayos-content, .electro-content {
+    flex: 1;
+}
+
+.history-content h4, .vaccine-content h4, .study-content h4, .hemogram-content h4,
+.ecografia-content h4, .orina-content h4, .quimica-content h4, .rayos-content h4, .electro-content h4 {
+    color: var(--primary-color);
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+.history-details, .study-details, .ecografia-details, .rayos-details, .electro-details {
+    background: var(--white);
+    padding: 10px;
+    border-radius: var(--border-radius);
+    margin-top: 10px;
+    white-space: pre-wrap;
+    line-height: 1.5;
+}
+
+.hemogram-values, .orina-values, .quimica-values {
+    background: var(--white);
+    padding: 15px;
+    border-radius: var(--border-radius);
+    margin-top: 10px;
+}
+
+.value-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 8px;
+}
+
+.value-row span {
+    font-size: 14px;
+}
+
+.historia-clinica-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    padding: 8px;
+    background: var(--light-bg);
+    border-radius: var(--border-radius);
+    color: var(--primary-color);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.historia-clinica-indicator i {
+    color: var(--secondary-color);
+}
+
+.info-note {
+    background: #e8f4f8;
+    border: 1px solid #bee5eb;
+    border-radius: var(--border-radius);
+    padding: 15px;
+    margin: 20px 0;
+    color: #0c5460;
+}
+
+.info-note p {
+    margin: 0;
+    font-size: 14px;
+}
+
+.info-note i {
+    color: #17a2b8;
+    margin-right: 8px;
+}
+
+/* Responsive para Historia Clínica */
+@media (max-width: 768px) {
+    .historia-header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+    
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .history-item, .vaccine-item, .study-item, .hemogram-item,
+    .ecografia-item, .orina-item, .quimica-item, .rayos-item, .electro-item {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .history-date, .vaccine-date, .study-date, .hemogram-date,
+    .ecografia-date, .orina-date, .quimica-date, .rayos-date, .electro-date {
+        width: 100%;
+        text-align: center;
+        padding: 10px;
+        background: var(--primary-color);
+        color: var(--white);
+        border-radius: var(--border-radius);
+    }
+    
+    .value-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+}
+
 /* Estilos para la sección de carrito y escáner */
 .cart-scanner-section {
     background: var(--white);
@@ -1890,6 +2250,12 @@ body {
     color: var(--text-color);
 }
 
+.pet-id {
+    font-size: 0.8em;
+    color: #666;
+    font-weight: normal;
+}
+
 .pet-ficha-details {
     background: var(--white);
     border-radius: var(--border-radius);
@@ -2033,8 +2399,167 @@ body {
     padding: 20px;
 }
 
+/* Estilos para la sección de clientes con paginación */
+.clients-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 20px 0;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.clients-controls .search-container {
+    position: relative;
+    flex-grow: 1;
+    max-width: 400px;
+}
+
+.clients-controls .search-container input {
+    width: 100%;
+    padding: 12px 40px 12px 12px;
+    border: 2px solid #ddd;
+    border-radius: var(--border-radius);
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+}
+
+.clients-controls .search-container input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(44, 90, 160, 0.1);
+}
+
+.clients-controls .search-container .search-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #666;
+    pointer-events: none;
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.pagination-controls label {
+    font-weight: 600;
+    color: var(--text-color);
+    white-space: nowrap;
+}
+
+.pagination-controls select {
+    padding: 8px 12px;
+    border: 2px solid #ddd;
+    border-radius: var(--border-radius);
+    font-size: 14px;
+    background: var(--white);
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+}
+
+.pagination-controls select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.table-info {
+    margin-top: 15px;
+    padding: 10px;
+    background: var(--light-bg);
+    border-radius: var(--border-radius);
+    font-size: 14px;
+    color: #666;
+    text-align: center;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.pagination .btn {
+    min-width: 40px;
+    height: 40px;
+    padding: 8px 12px;
+    border: 2px solid var(--primary-color);
+    background: var(--white);
+    color: var(--primary-color);
+    border-radius: var(--border-radius);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pagination .btn:hover {
+    background: var(--primary-color);
+    color: var(--white);
+}
+
+.pagination .btn.btn-primary {
+    background: var(--primary-color);
+    color: var(--white);
+}
+
+.pagination .btn.btn-outline-primary {
+    background: var(--white);
+    color: var(--primary-color);
+}
+
+.pagination-dots {
+    padding: 8px 4px;
+    color: #666;
+    font-weight: bold;
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+    min-width: auto;
+}
+
 /* Ajustes responsivos para las fichas */
 @media (max-width: 768px) {
+    .clients-controls {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
+    }
+    
+    .clients-controls .search-container {
+        max-width: none;
+    }
+    
+    .pagination-controls {
+        justify-content: center;
+    }
+    
+    .pagination {
+        gap: 4px;
+    }
+    
+    .pagination .btn {
+        min-width: 35px;
+        height: 35px;
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+    
+    .table-info {
+        font-size: 12px;
+    }
+    
     .pet-list-container {
         grid-template-columns: 1fr;
     }
@@ -2049,5 +2574,436 @@ body {
     
     .ficha-section {
         padding: 12px;
+    }
+}
+
+/* Estilos para la columna de mascotas en la tabla de clientes */
+.pet-info {
+    display: inline-block;
+    max-width: 200px;
+    line-height: 1.3;
+}
+
+.no-pets {
+    color: #999;
+    font-style: italic;
+    font-size: 0.9em;
+}
+
+.more-pets {
+    color: var(--primary-color);
+    font-weight: 600;
+    font-size: 0.85em;
+    background: rgba(44, 90, 160, 0.1);
+    padding: 2px 6px;
+    border-radius: 12px;
+    margin-left: 4px;
+}
+
+.pet-info span {
+    display: inline-block;
+    margin-right: 4px;
+}
+
+/* Ajustar el ancho de la columna de mascotas */
+.table th:nth-child(5),
+.table td:nth-child(5) {
+    width: 200px;
+    max-width: 200px;
+    word-wrap: break-word;
+    vertical-align: top;
+}
+/* Estilos para sección de comunicación */
+.communication-actions {
+    display: flex;
+    gap: 20px;
+    margin: 20px 0;
+    justify-content: center;
+}
+
+.btn-large {
+    padding: 15px 30px !important;
+    font-size: 18px !important;
+    min-width: 200px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.btn-large:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn-large i {
+    font-size: 20px;
+}
+
+.communications-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 20px 0;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+.search-controls {
+    position: relative;
+    flex: 1;
+    max-width: 300px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 10px 40px 10px 15px;
+    border: 2px solid #ddd;
+    border-radius: 25px;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #007bff;
+}
+
+.search-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #666;
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.pagination-controls label {
+    font-weight: 500;
+    color: #666;
+}
+
+.pagination-controls select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+}
+
+.badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.badge-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.badge-info {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.badge-success {
+    background-color: #28a745;
+    color: white;
+}
+
+.pagination-info {
+    text-align: center;
+    margin: 10px 0;
+    color: #666;
+    font-size: 14px;
+}
+
+#communicationsPagination {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+}
+
+#communicationsPagination .pagination-controls {
+    display: flex;
+    gap: 5px;
+    margin-top: 10px;
+}
+
+#communicationsPagination .btn {
+    min-width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@media (max-width: 768px) {
+    .communication-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .btn-large {
+        width: 100%;
+        max-width: 300px;
+    }
+    
+    .communications-controls {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .search-controls {
+        max-width: 100%;
+    }
+}
+
+/* Estilos específicos para fichas de pacientes migrados */
+.patient-ficha-complete {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.patient-basic-info {
+    background: var(--white);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+}
+
+.patient-basic-info h3 {
+    color: var(--primary-color);
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.patient-basic-info h3::before {
+    content: '🐾';
+    margin-right: 10px;
+    font-size: 1.2em;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.info-grid div {
+    padding: 10px;
+    background: var(--light-bg);
+    border-radius: 5px;
+    border-left: 4px solid var(--primary-color);
+}
+
+.contact-info {
+    border-top: 1px solid #eee;
+    padding-top: 15px;
+}
+
+.contact-info h4 {
+    color: var(--secondary-color);
+    margin-bottom: 10px;
+}
+
+.contact-info div {
+    margin-bottom: 5px;
+}
+
+.medical-history,
+.vaccines-history,
+.studies-history,
+.hemograms-history {
+    background: var(--white);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+}
+
+.medical-history h3,
+.vaccines-history h3,
+.studies-history h3,
+.hemograms-history h3 {
+    color: var(--primary-color);
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.medical-history h3::before {
+    content: '📋';
+    margin-right: 10px;
+}
+
+.vaccines-history h3::before {
+    content: '💉';
+    margin-right: 10px;
+}
+
+.studies-history h3::before {
+    content: '🔬';
+    margin-right: 10px;
+}
+
+.hemograms-history h3::before {
+    content: '🩸';
+    margin-right: 10px;
+}
+
+.medical-record,
+.study-record,
+.hemogram-record {
+    border: 1px solid #eee;
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 15px;
+    background: var(--light-bg);
+}
+
+.medical-record:last-child,
+.study-record:last-child,
+.hemogram-record:last-child {
+    margin-bottom: 0;
+}
+
+.record-header,
+.study-header,
+.hemogram-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.doctor {
+    background: var(--secondary-color);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+}
+
+.record-content,
+.study-content {
+    line-height: 1.6;
+}
+
+.record-content h4,
+.study-content h4 {
+    color: var(--primary-color);
+    margin-bottom: 8px;
+}
+
+.vaccines-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 15px;
+}
+
+.vaccine-record {
+    border: 1px solid #eee;
+    border-radius: 5px;
+    padding: 15px;
+    background: var(--light-bg);
+}
+
+.vaccine-record div {
+    margin-bottom: 5px;
+}
+
+.hemogram-values {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.hemogram-values div {
+    padding: 8px;
+    background: var(--white);
+    border-radius: 3px;
+    border-left: 3px solid var(--accent-color);
+}
+
+.no-records {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+}
+
+.no-records h3 {
+    color: var(--primary-color);
+    margin-bottom: 10px;
+}
+
+.error-message {
+    background: #fff5f5;
+    border: 1px solid #fed7d7;
+    border-radius: var(--border-radius);
+    padding: 20px;
+    text-align: center;
+    color: #c53030;
+}
+
+.error-message h3 {
+    color: #c53030;
+    margin-bottom: 10px;
+}
+
+.loading-message {
+    text-align: center;
+    padding: 40px;
+    color: var(--primary-color);
+}
+
+.loading-message i {
+    font-size: 2em;
+    margin-bottom: 10px;
+}
+
+/* Responsive para fichas */
+@media (max-width: 768px) {
+    .patient-ficha-complete {
+        padding: 10px;
+    }
+    
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .vaccines-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .hemogram-values {
+        grid-template-columns: 1fr;
+    }
+    
+    .record-header,
+    .study-header,
+    .hemogram-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
     }
 }

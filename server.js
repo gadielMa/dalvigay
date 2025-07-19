@@ -16,6 +16,117 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(bodyParser.json());
 
+// Función para convertir snake_case a camelCase
+function toCamelCase(str) {
+    return str.replace(/_([a-z])/g, (match, letter) => letter.toUpperCase());
+}
+
+// Función para convertir objetos de snake_case a camelCase
+function convertKeysToCamelCase(obj) {
+    if (obj === null || obj === undefined) {
+        return obj;
+    }
+    
+    if (Array.isArray(obj)) {
+        return obj.map(item => convertKeysToCamelCase(item));
+    }
+    
+    if (typeof obj === 'object') {
+        const converted = {};
+        for (const [key, value] of Object.entries(obj)) {
+            const camelKey = toCamelCase(key);
+            converted[camelKey] = convertKeysToCamelCase(value);
+        }
+        return converted;
+    }
+    
+    return obj;
+}
+
+// Función para convertir camelCase a snake_case
+function toSnakeCase(str) {
+    return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+}
+
+// Función para convertir objetos de camelCase a snake_case
+function convertKeysToSnakeCase(obj) {
+    if (obj === null || obj === undefined) {
+        return obj;
+    }
+    
+    if (Array.isArray(obj)) {
+        return obj.map(item => convertKeysToSnakeCase(item));
+    }
+    
+    if (typeof obj === 'object') {
+        const converted = {};
+        for (const [key, value] of Object.entries(obj)) {
+            const snakeKey = toSnakeCase(key);
+            converted[snakeKey] = convertKeysToSnakeCase(value);
+        }
+        return converted;
+    }
+    
+    return obj;
+}
+
+// Función para convertir texto a formato título
+function toTitleCase(str) {
+    if (!str || typeof str !== 'string') {
+        return str;
+    }
+    
+    return str.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+// Función para formatear nombres y direcciones en los datos de clientes
+function formatClientData(client) {
+    if (!client) return client;
+    
+    const formatted = { ...client };
+    
+    // Formatear nombre a título
+    if (formatted.name) {
+        formatted.name = toTitleCase(formatted.name);
+    }
+    
+    // Formatear dirección a título
+    if (formatted.address) {
+        formatted.address = toTitleCase(formatted.address);
+    }
+    
+    return formatted;
+}
+
+// Función para formatear datos de mascotas
+function formatPetData(pet) {
+    if (!pet) return pet;
+    
+    const formatted = { ...pet };
+    
+    // Formatear nombre de mascota a título
+    if (formatted.name) {
+        formatted.name = toTitleCase(formatted.name);
+    }
+    
+    // Formatear nombre del cliente a título
+    if (formatted.clientName) {
+        formatted.clientName = toTitleCase(formatted.clientName);
+    }
+    
+    // Formatear dirección del cliente a título
+    if (formatted.clientAddress) {
+        formatted.clientAddress = toTitleCase(formatted.clientAddress);
+    }
+    
+    // Formatear raza según la memoria del usuario (CamelCase para razas)
+    if (formatted.breed) {
+        formatted.breed = formatted.breed.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
+    }
+    
+    return formatted;
+}
+
 // Variable para controlar la inicialización
 let isInitialized = false;
 
@@ -371,17 +482,9 @@ async function initializeDatabase() {
             // Usar configuración individual como fallback
             console.log('🔧 Usando configuración individual de BD');
             
-            const sslConfig = process.env.VERCEL ? {
-                rejectUnauthorized: false,
-                ca: undefined,
-                checkServerIdentity: () => undefined,
-                secureProtocol: 'TLSv1_2_method'
-            } : {
-                rejectUnauthorized: false,
-                ca: undefined,
-                checkServerIdentity: () => undefined,
-                secureProtocol: 'TLSv1_2_method' // Supabase requiere SSL incluso en desarrollo
-            };
+            // Usar la configuración SSL del dbConfig (que respeta NODE_ENV)
+            const sslConfig = dbConfig.ssl;
+            console.log('🔧 Configuración SSL para desarrollo local:', sslConfig);
             
             pool = new Pool({
                 host: dbConfig.host,
@@ -390,7 +493,7 @@ async function initializeDatabase() {
                 password: dbConfig.password,
                 database: dbConfig.database,
                 ssl: sslConfig,
-                max: 1,
+                max: 10, // Más conexiones para desarrollo local
                 idleTimeoutMillis: 30000,
                 connectionTimeoutMillis: 10000
             });
@@ -667,9 +770,9 @@ async function insertDefaultUsers(client) {
         const hashedPassword = await bcrypt.hash('3155', 10);
         
         await client.query(`
-            INSERT INTO users (username, password, name, role, photo) VALUES
-            ('daniel', $1, 'Dr. Daniel Malagrino', 'Veterinario', 'daniel.png'),
-            ('liliana', $2, 'Dra. Liliana Vazquez', 'Veterinaria', 'liliana.png')
+            INSERT INTO usuarios (username, password, name, role) VALUES
+            ('daniel', $1, 'Dr. Daniel Malagrino', 'Veterinario'),
+            ('liliana', $2, 'Dra. Liliana Vazquez', 'Veterinaria')
             ON CONFLICT (username) DO UPDATE SET name = EXCLUDED.name
         `, [hashedPassword, hashedPassword]);
         
@@ -886,7 +989,7 @@ app.post('/api/login', async (req, res) => {
         
         const client = await pool.connect();
         const result = await client.query(
-            'SELECT * FROM users WHERE username = $1',
+            'SELECT * FROM usuarios WHERE username = $1',
             [username]
         );
         client.release();
@@ -908,7 +1011,7 @@ app.post('/api/login', async (req, res) => {
             { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
         );
 
-        res.json({
+        const userResponse = convertKeysToCamelCase({
             token,
             user: {
                 id: user.id,
@@ -918,6 +1021,8 @@ app.post('/api/login', async (req, res) => {
                 photo: user.photo
             }
         });
+        
+        res.json(userResponse);
 
     } catch (error) {
         console.error('Error en login:', error);
@@ -971,7 +1076,8 @@ app.get('/api/medical-records', authenticateToken, async (req, res) => {
             return row;
         });
         
-        res.json(processedRows);
+        const convertedData = convertKeysToCamelCase(processedRows);
+        res.json(convertedData);
     } catch (error) {
         console.error('Error al obtener registros médicos:', error);
         res.status(500).json({ error: 'Error interno del servidor' });
@@ -980,7 +1086,9 @@ app.get('/api/medical-records', authenticateToken, async (req, res) => {
 
 app.post('/api/medical-records', authenticateToken, async (req, res) => {
     try {
-        const { petName, ownerName, ownerEmail, ownerPhone, date, diagnosis, treatment, nextAppointment, appliedMedications, petId } = req.body; // Añadir petId
+        // Convertir datos de entrada de camelCase a snake_case si es necesario
+        const requestData = convertKeysToSnakeCase(req.body);
+        const { pet_name: petName, owner_name: ownerName, owner_email: ownerEmail, owner_phone: ownerPhone, date, diagnosis, treatment, next_appointment: nextAppointment, applied_medications: appliedMedications, pet_id: petId } = requestData;
         
         const client = await pool.connect();
         
@@ -1054,12 +1162,13 @@ app.post('/api/medical-records', authenticateToken, async (req, res) => {
             // Confirmar transacción
             await client.query('COMMIT');
             
-            res.json({ 
+            const response = convertKeysToCamelCase({ 
                 id: result.rows[0].id, 
                 message: 'Registro médico creado exitosamente',
-                clientId: clientId,
-                petId: actualPetId // Devolver el ID de la mascota también
+                client_id: clientId,
+                pet_id: actualPetId // Devolver el ID de la mascota también
             });
+            res.json(response);
             
         } catch (error) {
             // Revertir transacción en caso de error
@@ -1078,7 +1187,9 @@ app.post('/api/medical-records', authenticateToken, async (req, res) => {
 app.put('/api/medical-records/:id', authenticateToken, async (req, res) => {
     try {
         const { id } = req.params;
-        const { petName, ownerName, ownerEmail, ownerPhone, date, diagnosis, treatment, nextAppointment, appliedMedications, petId } = req.body; // Añadir petId
+        // Convertir datos de entrada de camelCase a snake_case si es necesario
+        const requestData = convertKeysToSnakeCase(req.body);
+        const { pet_name: petName, owner_name: ownerName, owner_email: ownerEmail, owner_phone: ownerPhone, date, diagnosis, treatment, next_appointment: nextAppointment, applied_medications: appliedMedications, pet_id: petId } = requestData;
         
         console.log(`🔄 Actualizando registro médico ID: ${id}`);
         console.log('📝 Datos recibidos:', { petName, ownerName, ownerEmail, ownerPhone, date, diagnosis, treatment, nextAppointment, petId });
@@ -1152,12 +1263,13 @@ app.put('/api/medical-records/:id', authenticateToken, async (req, res) => {
             
             console.log(`✅ Registro médico actualizado exitosamente. ID: ${result.rows[0].id}`);
             
-            res.json({ 
+            const response = convertKeysToCamelCase({ 
                 id: result.rows[0].id, 
                 message: 'Registro médico actualizado exitosamente',
-                clientId: clientId,
-                petId: actualPetId // Devolver el ID de la mascota también
+                client_id: clientId,
+                pet_id: actualPetId // Devolver el ID de la mascota también
             });
+            res.json(response);
             
         } catch (error) {
             // Revertir transacción en caso de error
@@ -1197,7 +1309,8 @@ app.get('/api/inventory', authenticateToken, async (req, res) => {
         );
         client.release();
         
-        res.json(result.rows);
+        const convertedData = convertKeysToCamelCase(result.rows);
+        res.json(convertedData);
     } catch (error) {
         console.error('Error al obtener inventario:', error);
         res.status(500).json({ error: 'Error interno del servidor' });
@@ -1206,7 +1319,9 @@ app.get('/api/inventory', authenticateToken, async (req, res) => {
 
 app.post('/api/inventory', authenticateToken, async (req, res) => {
     try {
-        const { name, category, stock, minStock, expiryDate, supplier, barcode } = req.body;
+        // Convertir datos de entrada de camelCase a snake_case si es necesario
+        const requestData = convertKeysToSnakeCase(req.body);
+        const { name, category, stock, min_stock: minStock, expiry_date: expiryDate, supplier, barcode } = requestData;
         
         const client = await pool.connect();
         const result = await client.query(
@@ -1215,7 +1330,8 @@ app.post('/api/inventory', authenticateToken, async (req, res) => {
         );
         client.release();
 
-        res.json({ id: result.rows[0].id, message: 'Producto agregado exitosamente' });
+        const response = convertKeysToCamelCase({ id: result.rows[0].id, message: 'Producto agregado exitosamente' });
+        res.json(response);
     } catch (error) {
         console.error('Error al agregar producto:', error);
         res.status(500).json({ error: 'Error interno del servidor' });
@@ -1240,7 +1356,8 @@ app.get('/api/inventory/search', authenticateToken, async (req, res) => {
         );
         client.release();
         
-        res.json(result.rows);
+        const convertedData = convertKeysToCamelCase(result.rows);
+        res.json(convertedData);
     } catch (error) {
         console.error('Error al buscar productos:', error);
         res.status(500).json({ error: 'Error interno del servidor' });
@@ -1263,7 +1380,8 @@ app.get('/api/inventory/barcode/:barcode', authenticateToken, async (req, res) =
             return res.status(404).json({ error: 'Producto no encontrado' });
         }
         
-        res.json(result.rows[0]);
+        const convertedData = convertKeysToCamelCase(result.rows[0]);
+        res.json(convertedData);
     } catch (error) {
         console.error('Error al buscar producto por código de barras:', error);
         res.status(500).json({ error: 'Error interno del servidor' });
@@ -1273,7 +1391,9 @@ app.get('/api/inventory/barcode/:barcode', authenticateToken, async (req, res) =
 // Ruta para procesar venta de producto
 app.post('/api/inventory/sell', authenticateToken, async (req, res) => {
     try {
-        const { productId, quantity = 1 } = req.body;
+        // Convertir datos de entrada de camelCase a snake_case si es necesario
+        const requestData = convertKeysToSnakeCase(req.body);
+        const { product_id: productId, quantity = 1 } = requestData;
         
         if (!productId) {
             return res.status(400).json({ error: 'ID del producto requerido' });
@@ -1320,18 +1440,19 @@ app.post('/api/inventory/sell', authenticateToken, async (req, res) => {
         // Verificar si el stock está por debajo del mínimo
         const isLowStock = newStock <= product.min_stock;
         
-        res.json({
+        const response = convertKeysToCamelCase({
             message: 'Venta procesada exitosamente',
             product: {
                 id: product.id,
                 name: product.name,
                 sold: quantity,
-                previousStock: product.stock,
-                newStock: newStock,
-                isLowStock: isLowStock,
-                minStock: product.min_stock
+                previous_stock: product.stock,
+                new_stock: newStock,
+                is_low_stock: isLowStock,
+                min_stock: product.min_stock
             }
         });
+        res.json(response);
     } catch (error) {
         console.error('Error al procesar venta:', error);
         res.status(500).json({ error: 'Error interno del servidor' });
@@ -1444,7 +1565,12 @@ app.get('/api/pets', authenticateToken, async (req, res) => {
             ORDER BY p.name
         `);
         client.release();
-        res.json(result.rows);
+        
+        // Aplicar conversión a camelCase y formateo de nombres/direcciones
+        const convertedData = convertKeysToCamelCase(result.rows);
+        const formattedData = convertedData.map(pet => formatPetData(pet));
+        
+        res.json(formattedData);
     } catch (error) {
         console.error('Error al obtener mascotas:', error);
         res.status(500).json({ error: 'Error interno del servidor' });
@@ -1454,7 +1580,9 @@ app.get('/api/pets', authenticateToken, async (req, res) => {
 app.put('/api/pets/:id', authenticateToken, async (req, res) => {
     try {
         const { id } = req.params;
-        const { client_id, species, breed, age } = req.body;
+        // Convertir datos de entrada de camelCase a snake_case si es necesario
+        const requestData = convertKeysToSnakeCase(req.body);
+        const { client_id, species, breed, age } = requestData;
         
         console.log(`🔄 Actualizando mascota ID: ${id}`);
         console.log('📝 Datos recibidos:', { client_id, species, breed, age });
@@ -1471,10 +1599,12 @@ app.put('/api/pets/:id', authenticateToken, async (req, res) => {
         }
         
         console.log(`✅ Mascota actualizada exitosamente. ID: ${result.rows[0].id}`);
-        res.json({ 
+        
+        const response = convertKeysToCamelCase({ 
             id: result.rows[0].id, 
             message: 'Mascota actualizada exitosamente'
         });
+        res.json(response);
         
     } catch (error) {
         console.error('Error al actualizar mascota:', error);
@@ -1491,7 +1621,11 @@ app.get('/api/clients', authenticateToken, async (req, res) => {
         );
         client.release();
         
-        res.json(result.rows);
+        // Aplicar conversión a camelCase y formateo de nombres/direcciones
+        const convertedData = convertKeysToCamelCase(result.rows);
+        const formattedData = convertedData.map(client => formatClientData(client));
+        
+        res.json(formattedData);
     } catch (error) {
         console.error('Error al obtener clientes:', error);
         res.status(500).json({ error: 'Error interno del servidor' });
@@ -1500,16 +1634,25 @@ app.get('/api/clients', authenticateToken, async (req, res) => {
 
 app.post('/api/clients', authenticateToken, async (req, res) => {
     try {
-        const { name, email, phone, address } = req.body;
+        // Convertir datos de entrada de camelCase a snake_case si es necesario
+        const requestData = convertKeysToSnakeCase(req.body);
+        const { name, email, phone, address } = requestData;
         
         const client = await pool.connect();
         const result = await client.query(
-            'INSERT INTO clients (name, email, phone, address) VALUES ($1, $2, $3, $4) RETURNING id',
+            'INSERT INTO clients (name, email, phone, address) VALUES ($1, $2, $3, $4) RETURNING *',
             [name, email, phone, address]
         );
         client.release();
 
-        res.json({ id: result.rows[0].id, message: 'Cliente agregado exitosamente' });
+        // Aplicar conversión a camelCase y formateo de nombres/direcciones
+        const convertedClient = convertKeysToCamelCase(result.rows[0]);
+        const formattedClient = formatClientData(convertedClient);
+
+        res.json({ 
+            message: 'Cliente agregado exitosamente',
+            client: formattedClient
+        });
     } catch (error) {
         console.error('Error al agregar cliente:', error);
         res.status(500).json({ error: 'Error interno del servidor' });
@@ -1519,13 +1662,15 @@ app.post('/api/clients', authenticateToken, async (req, res) => {
 app.put('/api/clients/:id', authenticateToken, async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, email, phone, address } = req.body;
+        // Convertir datos de entrada de camelCase a snake_case si es necesario
+        const requestData = convertKeysToSnakeCase(req.body);
+        const { name, email, phone, address } = requestData;
         
         console.log(`📝 Actualizando cliente con ID: ${id}`);
         
         const client = await pool.connect();
         const result = await client.query(
-            'UPDATE clients SET name = $1, email = $2, phone = $3, address = $4, updated_at = CURRENT_TIMESTAMP WHERE id = $5 RETURNING id',
+            'UPDATE clients SET name = $1, email = $2, phone = $3, address = $4, updated_at = CURRENT_TIMESTAMP WHERE id = $5 RETURNING *',
             [name, email, phone, address, id]
         );
         client.release();
@@ -1536,7 +1681,14 @@ app.put('/api/clients/:id', authenticateToken, async (req, res) => {
 
         console.log(`✅ Cliente actualizado exitosamente. ID: ${result.rows[0].id}`);
         
-        res.json({ id: result.rows[0].id, message: 'Cliente actualizado exitosamente' });
+        // Aplicar conversión a camelCase y formateo de nombres/direcciones
+        const convertedClient = convertKeysToCamelCase(result.rows[0]);
+        const formattedClient = formatClientData(convertedClient);
+        
+        res.json({ 
+            message: 'Cliente actualizado exitosamente',
+            client: formattedClient
+        });
     } catch (error) {
         console.error('❌ Error al actualizar cliente:', error);
         res.status(500).json({ error: 'Error interno del servidor' });
@@ -1612,6 +1764,371 @@ app.post('/api/validate-phone', authenticateToken, async (req, res) => {
         });
     } catch (error) {
         console.error('Error al validar número de teléfono:', error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+});
+
+// ========================================
+// RUTAS API PARA DATOS MIGRADOS (FICHAS)
+// ========================================
+
+// Obtener todos los clientes migrados
+app.get('/api/migrated/clients', authenticateToken, async (req, res) => {
+    try {
+        const client = await pool.connect();
+        const result = await client.query(`
+            SELECT 
+                "CLI_ID" as id,
+                "CLI_NOMBRE" as nombre,
+                "CLI_APELLIDO" as apellido,
+                "CLI_RAZSOC" as razon_social,
+                "CLI_CUIT" as cuit,
+                "CLI_TEL1" as telefono,
+                "CLI_MAIL" as email,
+                "CLI_DOMIC" as domicilio,
+                "CLI_LOC" as localidad,
+                "CLI_PROV" as provincia,
+                "CLI_PAIS" as pais,
+                "CLI_FECHA_ALTA" as fecha_alta,
+                "CLI_IDCLIENTE" as id_cliente
+            FROM "CLIENTES"
+            ORDER BY "CLI_NOMBRE", "CLI_APELLIDO"
+        `);
+        client.release();
+        
+        const convertedData = convertKeysToCamelCase(result.rows);
+        res.json(convertedData);
+    } catch (error) {
+        console.error('Error al obtener clientes migrados:', error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+});
+
+// Obtener todos los pacientes migrados con información del cliente
+app.get('/api/migrated/patients', authenticateToken, async (req, res) => {
+    try {
+        const client = await pool.connect();
+        const result = await client.query(`
+            SELECT 
+                p."PAC_ID" as id,
+                p."PAC_NOMBRE" as nombre,
+                p."PAC_APELLIDO" as apellido,
+                p."PAC_NOMCOMP" as nombre_completo,
+                p."PAC_FECHA_NAC" as fecha_nacimiento,
+                p."PAC_RAZ_ESP" as especie,
+                p."PAC_RAZ_NOMBRE" as raza,
+                p."PAC_SEXO" as sexo,
+                p."PAC_COLOR" as color,
+                p."PAC_PESO" as peso,
+                p."PAC_CLIENTE" as cliente_id,
+                p."PAC_FECHA_ALTA" as fecha_alta,
+                p."PAC_FECHA_DES" as estado,
+                p."PAC_IDPACIENTE" as id_paciente,
+                c."CLI_NOMBRE" as cliente_nombre,
+                c."CLI_APELLIDO" as cliente_apellido,
+                c."CLI_RAZSOC" as cliente_razon_social,
+                c."CLI_TEL1" as cliente_telefono,
+                c."CLI_MAIL" as cliente_email,
+                c."CLI_DOMIC" as cliente_domicilio,
+                c."CLI_LOC" as cliente_localidad
+            FROM "PACIENTES" p
+            LEFT JOIN "CLIENTES" c ON p."PAC_CLIENTE" = c."CLI_ID"
+            ORDER BY p."PAC_NOMBRE", p."PAC_APELLIDO"
+        `);
+        client.release();
+        
+        const convertedData = convertKeysToCamelCase(result.rows);
+        res.json(convertedData);
+    } catch (error) {
+        console.error('Error al obtener pacientes migrados:', error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+});
+
+// Obtener historial médico completo de un paciente
+app.get('/api/migrated/patient/:id/history', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const client = await pool.connect();
+        
+        // Obtener información del paciente
+        const patientResult = await client.query(`
+            SELECT 
+                p."PAC_ID" as id,
+                p."PAC_NOMBRE" as nombre,
+                p."PAC_APELLIDO" as apellido,
+                p."PAC_NOMCOMP" as nombre_completo,
+                p."PAC_FECHA_NAC" as fecha_nacimiento,
+                p."PAC_RAZ_ESP" as especie,
+                p."PAC_RAZ_NOMBRE" as raza,
+                p."PAC_SEXO" as sexo,
+                p."PAC_COLOR" as color,
+                p."PAC_PESO" as peso,
+                p."PAC_IDPACIENTE" as id_paciente,
+                c."CLI_NOMBRE" as cliente_nombre,
+                c."CLI_APELLIDO" as cliente_apellido,
+                c."CLI_RAZSOC" as cliente_razon_social,
+                c."CLI_TEL1" as cliente_telefono,
+                c."CLI_MAIL" as cliente_email,
+                c."CLI_DOMIC" as cliente_domicilio
+            FROM "PACIENTES" p
+            LEFT JOIN "CLIENTES" c ON p."PAC_CLIENTE" = c."CLI_ID"
+            WHERE p."PAC_ID" = $1
+        `, [id]);
+        
+        if (patientResult.rows.length === 0) {
+            client.release();
+            return res.status(404).json({ error: 'Paciente no encontrado' });
+        }
+        
+        const patient = patientResult.rows[0];
+        const pacId = patient.id; // PAC_ID para HCREN
+        const pacIdPaciente = patient.id_paciente; // PAC_IDPACIENTE para otros estudios
+        
+        console.log(`🔍 Buscando historia para paciente ID: ${id}, PAC_ID: ${pacId}, PAC_IDPACIENTE: ${pacIdPaciente}`);
+        
+        // Obtener historial médico (HCREN)
+        const historyResult = await client.query(`
+            SELECT 
+                "HCR_ID" as id,
+                "HCR_FECHA_HC" as fecha,
+                "HCR_TITULO" as titulo,
+                "HCR_PESO" as peso,
+                "HCR_TEMP" as temperatura,
+                "HCR_DETALLE" as detalle,
+                "HCR_DR" as doctor
+            FROM "HCREN"
+            WHERE "HCR_HCC_IDPACIENTE" = $1
+            ORDER BY "HCR_FECHA_HC" DESC
+        `, [pacId]);
+        
+        // Obtener vacunas
+        const vaccinesResult = await client.query(`
+            SELECT 
+                "VAC_ID" as id,
+                "VAC_FVISITA" as fecha_visita,
+                "VAC_FPROXIMA" as fecha_proxima,
+                "VAC_MARCA" as marca,
+                "VAC_CLASE" as clase,
+                "VAC_PRECIO" as precio,
+                "VAC_DR" as doctor
+            FROM "VACUNAS"
+            WHERE "VAC_IDPACIENTE" = $1
+            ORDER BY "VAC_FVISITA" DESC
+        `, [pacIdPaciente]);
+        
+        // Obtener estudios
+        const studiesResult = await client.query(`
+            SELECT 
+                "EST_ID" as id,
+                "EST_FVISITA" as fecha,
+                "EST_TITULO" as titulo,
+                "EST_DETALLE" as detalle,
+                "EST_DR" as doctor
+            FROM "ESTUDIOS"
+            WHERE "EST_IDPACIENTE" = $1
+            ORDER BY "EST_FVISITA" DESC
+        `, [pacIdPaciente]);
+        
+        // Obtener hemogramas
+        const hemogramasResult = await client.query(`
+            SELECT 
+                "HEM_ID" as id,
+                "HEM_FVISITA" as fecha,
+                "HEM_DR" as doctor,
+                "HEM_HEMATIES" as hematies,
+                "HEM_HEMOGLOBINA" as hemoglobina,
+                "HEM_HEMATOCRITOS" as hematocritos,
+                "HEM_LEUCOCITOS" as leucocitos,
+                "HEM_OBSER" as observaciones
+            FROM "HEMOGRAMAS"
+            WHERE "HEM_IDPACIENTE" = $1
+            ORDER BY "HEM_FVISITA" DESC
+        `, [pacIdPaciente]);
+        
+        // Obtener ecografías
+        const ecografiasResult = await client.query(`
+            SELECT 
+                "ECO_ID" as id,
+                "ECO_FECHA" as fecha,
+                "ECO_DR" as doctor,
+                "ECO_ESTUDIO" as titulo,
+                "ECO_DIAG" as detalle
+            FROM "ECOGRAFIAS"
+            WHERE "ECO_IDPACIENTE" = $1
+            ORDER BY "ECO_FECHA" DESC
+        `, [pacIdPaciente]);
+        
+        // Obtener análisis de orina
+        const orinaResult = await client.query(`
+            SELECT 
+                "ORI_ID" as id,
+                "ORI_FECHA" as fecha,
+                "ORI_DR" as doctor,
+                "ORI_DENSIDAD" as densidad,
+                "ORI_PH" as ph,
+                "ORI_PROTEINAS" as proteinas,
+                "ORI_GLUCOSA" as glucosa,
+                "ORI_CETONAS" as cetonas,
+                "ORI_SANGRE" as sangre,
+                "ORI_LEUCOCITOS" as leucocitos,
+                "ORI_NITRIOS" as nitritos,
+                "ORI_OBSER2" as observaciones
+            FROM "ORINA"
+            WHERE "ORI_IDPACIENTE" = $1
+            ORDER BY "ORI_FECHA" DESC
+        `, [pacIdPaciente]);
+        
+        // Obtener química sanguínea
+        const quimicaResult = await client.query(`
+            SELECT 
+                "QS_ID" as id,
+                "QS_FVISITA" as fecha,
+                "QS_DR" as doctor,
+                "QS_GLUCOSA2" as glucosa,
+                "QS_UREA" as urea,
+                "QS_CREATININA" as creatinina,
+                "QS_COLESTEROL" as colesterol,
+                "QS_TRIGLICERIDOS" as trigliceridos,
+                "QS_PROTEINA2" as observaciones
+            FROM "QUIMICASANG"
+            WHERE "QS_IDPACIENTE" = $1
+            ORDER BY "QS_FVISITA" DESC
+        `, [pacIdPaciente]);
+        
+        // Obtener rayos X
+        const rayosResult = await client.query(`
+            SELECT 
+                "RAY_ID" as id,
+                "RAY_FVISITA" as fecha,
+                "RAY_DR" as doctor,
+                "RAY_ESTUDIO" as titulo,
+                "RAY_DIAG" as detalle
+            FROM "RAYOS"
+            WHERE "RAY_IDPACIENTE" = $1
+            ORDER BY "RAY_FVISITA" DESC
+        `, [pacIdPaciente]);
+        
+        // Obtener electrocardiograma
+        const electroResult = await client.query(`
+            SELECT 
+                "ELE_ID" as id,
+                "ELE_FECHA" as fecha,
+                "ELE_DR" as doctor,
+                "ELE_ESTUDIO" as titulo,
+                "ELE_DIAG" as detalle
+            FROM "ELECTROCARDIO"
+            WHERE "ELE_IDPACIENTE" = $1
+            ORDER BY "ELE_FECHA" DESC
+        `, [pacIdPaciente]);
+        
+        client.release();
+        
+        console.log(`📊 Resultados encontrados:`);
+        console.log(`   - Historia: ${historyResult.rows.length} registros`);
+        console.log(`   - Vacunas: ${vaccinesResult.rows.length} registros`);
+        console.log(`   - Estudios: ${studiesResult.rows.length} registros`);
+        console.log(`   - Hemogramas: ${hemogramasResult.rows.length} registros`);
+        console.log(`   - Ecografías: ${ecografiasResult.rows.length} registros`);
+        console.log(`   - Análisis de Orina: ${orinaResult.rows.length} registros`);
+        console.log(`   - Química Sanguínea: ${quimicaResult.rows.length} registros`);
+        console.log(`   - Rayos X: ${rayosResult.rows.length} registros`);
+        console.log(`   - Electrocardiograma: ${electroResult.rows.length} registros`);
+        
+        const response = {
+            patient: convertKeysToCamelCase(patient),
+            history: convertKeysToCamelCase(historyResult.rows),
+            vaccines: convertKeysToCamelCase(vaccinesResult.rows),
+            studies: convertKeysToCamelCase(studiesResult.rows),
+            hemograms: convertKeysToCamelCase(hemogramasResult.rows),
+            ecografias: convertKeysToCamelCase(ecografiasResult.rows),
+            orina: convertKeysToCamelCase(orinaResult.rows),
+            quimicaSanguinea: convertKeysToCamelCase(quimicaResult.rows),
+            rayosX: convertKeysToCamelCase(rayosResult.rows),
+            electrocardiograma: convertKeysToCamelCase(electroResult.rows)
+        };
+        
+        res.json(response);
+    } catch (error) {
+        console.error('Error al obtener historial del paciente:', error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+});
+
+// Buscar pacientes por nombre o propietario
+app.get('/api/migrated/search', authenticateToken, async (req, res) => {
+    try {
+        const { q, type } = req.query;
+        
+        if (!q) {
+            return res.status(400).json({ error: 'Parámetro de búsqueda requerido' });
+        }
+        
+        const client = await pool.connect();
+        let query = '';
+        let params = [];
+        
+        if (type === 'owner') {
+            // Buscar por propietario
+            query = `
+                SELECT 
+                    p."PAC_ID" as id,
+                    p."PAC_NOMBRE" as nombre,
+                    p."PAC_APELLIDO" as apellido,
+                    p."PAC_NOMCOMP" as nombre_completo,
+                    p."PAC_RAZ_ESP" as especie,
+                    p."PAC_RAZ_NOMBRE" as raza,
+                    p."PAC_SEXO" as sexo,
+                    p."PAC_COLOR" as color,
+                    p."PAC_IDPACIENTE" as id_paciente,
+                    c."CLI_NOMBRE" as cliente_nombre,
+                    c."CLI_APELLIDO" as cliente_apellido,
+                    c."CLI_RAZSOC" as cliente_razon_social,
+                    c."CLI_TEL1" as cliente_telefono,
+                    c."CLI_MAIL" as cliente_email
+                FROM "PACIENTES" p
+                LEFT JOIN "CLIENTES" c ON p."PAC_CLIENTE" = c."CLI_ID"
+                WHERE LOWER(c."CLI_NOMBRE") LIKE LOWER($1) 
+                   OR LOWER(c."CLI_APELLIDO") LIKE LOWER($1)
+                   OR LOWER(c."CLI_RAZSOC") LIKE LOWER($1)
+                ORDER BY p."PAC_NOMBRE", p."PAC_APELLIDO"
+            `;
+            params = [`%${q}%`];
+        } else {
+            // Buscar por paciente (por defecto)
+            query = `
+                SELECT 
+                    p."PAC_ID" as id,
+                    p."PAC_NOMBRE" as nombre,
+                    p."PAC_APELLIDO" as apellido,
+                    p."PAC_NOMCOMP" as nombre_completo,
+                    p."PAC_RAZ_ESP" as especie,
+                    p."PAC_RAZ_NOMBRE" as raza,
+                    p."PAC_SEXO" as sexo,
+                    p."PAC_COLOR" as color,
+                    p."PAC_IDPACIENTE" as id_paciente,
+                    c."CLI_NOMBRE" as cliente_nombre,
+                    c."CLI_APELLIDO" as cliente_apellido,
+                    c."CLI_RAZSOC" as cliente_razon_social,
+                    c."CLI_TEL1" as cliente_telefono,
+                    c."CLI_MAIL" as cliente_email
+                FROM "PACIENTES" p
+                LEFT JOIN "CLIENTES" c ON p."PAC_CLIENTE" = c."CLI_ID"
+                WHERE LOWER(p."PAC_NOMBRE") LIKE LOWER($1) 
+                   OR LOWER(p."PAC_APELLIDO") LIKE LOWER($1)
+                   OR LOWER(p."PAC_NOMCOMP") LIKE LOWER($1)
+                ORDER BY p."PAC_NOMBRE", p."PAC_APELLIDO"
+            `;
+            params = [`%${q}%`];
+        }
+        
+        const result = await client.query(query, params);
+        client.release();
+        
+        const convertedData = convertKeysToCamelCase(result.rows);
+        res.json(convertedData);
+    } catch (error) {
+        console.error('Error al buscar pacientes:', error);
         res.status(500).json({ error: 'Error interno del servidor' });
     }
 });
@@ -1704,7 +2221,8 @@ app.get('/api/communications', authenticateToken, async (req, res) => {
         `);
         client.release();
         
-        res.json(result.rows);
+        const convertedData = convertKeysToCamelCase(result.rows);
+        res.json(convertedData);
     } catch (error) {
         console.error('Error al obtener comunicaciones:', error);
         res.status(500).json({ error: 'Error interno del servidor' });
@@ -1713,7 +2231,9 @@ app.get('/api/communications', authenticateToken, async (req, res) => {
 
 app.post('/api/communications', authenticateToken, async (req, res) => {
     try {
-        const { clientId, type, subject, message } = req.body;
+        // Convertir datos de entrada de camelCase a snake_case si es necesario
+        const requestData = convertKeysToSnakeCase(req.body);
+        const { client_id: clientId, type, subject, message } = requestData;
         
         const client = await pool.connect();
         
@@ -1776,15 +2296,16 @@ app.post('/api/communications', authenticateToken, async (req, res) => {
         );
         client.release();
 
-        res.json({ 
+        const response = convertKeysToCamelCase({ 
             id: result.rows[0].id, 
             message: sendResult.success ? 'Comunicación enviada exitosamente' : 'Comunicación guardada pero no se pudo enviar',
-            emailResult: type === 'email' ? sendResult : undefined,
-            smsResult: type === 'sms' ? sendResult : undefined,
-            clientName: clientData.name,
-            clientEmail: clientData.email,
-            clientPhone: clientData.phone
+            email_result: type === 'email' ? sendResult : undefined,
+            sms_result: type === 'sms' ? sendResult : undefined,
+            client_name: clientData.name,
+            client_email: clientData.email,
+            client_phone: clientData.phone
         });
+        res.json(response);
     } catch (error) {
         console.error('Error al enviar comunicación:', error);
         res.status(500).json({ error: 'Error interno del servidor' });
@@ -1821,7 +2342,8 @@ app.get('/api/sales', authenticateToken, async (req, res) => {
         `);
         client.release();
         
-        res.json(result.rows);
+        const convertedData = convertKeysToCamelCase(result.rows);
+        res.json(convertedData);
     } catch (error) {
         console.error('Error al obtener ventas:', error);
         res.status(500).json({ error: 'Error interno del servidor' });
@@ -1830,7 +2352,9 @@ app.get('/api/sales', authenticateToken, async (req, res) => {
 
 app.post('/api/sales', authenticateToken, async (req, res) => {
     try {
-        const { items, notes = '' } = req.body;
+        // Convertir datos de entrada de camelCase a snake_case si es necesario
+        const requestData = convertKeysToSnakeCase(req.body);
+        const { items, notes = '' } = requestData;
         
         if (!items || items.length === 0) {
             return res.status(400).json({ error: 'No se proporcionaron items para la venta' });
@@ -1849,13 +2373,17 @@ app.post('/api/sales', authenticateToken, async (req, res) => {
             
             // Verificar stock y calcular totales
             for (const item of items) {
+                // Convertir item de camelCase a snake_case si es necesario
+                const itemData = convertKeysToSnakeCase(item);
+                const productId = itemData.product_id || itemData.productId;
+                
                 const productResult = await client.query(
                     'SELECT id, name, stock, price FROM inventory WHERE id = $1',
-                    [item.productId]
+                    [productId]
                 );
                 
                 if (productResult.rows.length === 0) {
-                    throw new Error(`Producto con ID ${item.productId} no encontrado`);
+                    throw new Error(`Producto con ID ${productId} no encontrado`);
                 }
                 
                 const product = productResult.rows[0];
@@ -1868,11 +2396,11 @@ app.post('/api/sales', authenticateToken, async (req, res) => {
                 const totalPrice = unitPrice * item.quantity;
                 
                 processedItems.push({
-                    productId: product.id,
-                    productName: product.name,
+                    product_id: product.id,
+                    product_name: product.name,
                     quantity: item.quantity,
-                    unitPrice: unitPrice,
-                    totalPrice: totalPrice
+                    unit_price: unitPrice,
+                    total_price: totalPrice
                 });
                 
                 totalAmount += totalPrice;
@@ -1892,26 +2420,27 @@ app.post('/api/sales', authenticateToken, async (req, res) => {
                 // Insertar item de venta
                 await client.query(
                     'INSERT INTO sale_items (sale_id, product_id, product_name, quantity, unit_price, total_price) VALUES ($1, $2, $3, $4, $5, $6)',
-                    [saleId, item.productId, item.productName, item.quantity, item.unitPrice, item.totalPrice]
+                    [saleId, item.product_id, item.product_name, item.quantity, item.unit_price, item.total_price]
                 );
                 
                 // Actualizar stock
                 await client.query(
                     'UPDATE inventory SET stock = stock - $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
-                    [item.quantity, item.productId]
+                    [item.quantity, item.product_id]
                 );
             }
             
             // Confirmar transacción
             await client.query('COMMIT');
             
-            res.json({
+            const response = convertKeysToCamelCase({
                 id: saleId,
                 message: 'Venta procesada exitosamente',
-                totalAmount: totalAmount,
-                totalItems: totalItems,
+                total_amount: totalAmount,
+                total_items: totalItems,
                 items: processedItems
             });
+            res.json(response);
             
         } catch (error) {
             // Revertir transacción en caso de error
@@ -1930,12 +2459,12 @@ app.post('/api/sales', authenticateToken, async (req, res) => {
 // Servir archivos estáticos (después de las rutas API)
 // En Vercel, los archivos estáticos se sirven automáticamente desde /public
 if (!process.env.VERCEL) {
-    // Solo en desarrollo local, servir archivos estáticos desde la raíz
-    app.use(express.static('.'));
+    // Solo en desarrollo local, servir archivos estáticos desde public
+    app.use(express.static('public'));
     
     // Ruta para servir archivos estáticos en desarrollo local
     app.get('/', (req, res) => {
-        const indexPath = path.resolve(__dirname, 'index.html');
+        const indexPath = path.resolve(__dirname, 'public', 'index.html');
         res.sendFile(indexPath);
     });
 }

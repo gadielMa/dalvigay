@@ -2,8 +2,8 @@
 const CONFIG = {
     // API Configuration
     API_BASE_URL: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-        ? 'http://localhost:3000/api'
-        : '/api',
+        ? 'http://localhost:8080/api'
+        : 'https://dalvigay-backend.up.railway.app/api',
     
     // Application Settings
     APP_NAME: 'CediapVet',

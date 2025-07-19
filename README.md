@@ -1,137 +1,245 @@
-# CediapVet - Sistema de Gestión Veterinaria
+# 🐕 Dalvigay - Frontend Veterinario 🐱
 
-Un sistema completo de gestión para clínicas veterinarias que incluye registros médicos electrónicos, gestión de inventario y comunicación con clientes.
-
-## Características
-
-### 🏥 Registros Médicos Electrónicos (EMR)
-- Base de datos centralizada para historiales médicos
-- Gestión de vacunas, diagnósticos y tratamientos
-- Seguimiento de resultados de laboratorio
-- Programación de citas futuras
-
-### 📦 Gestión de Inventario
-- Seguimiento de medicamentos, vacunas y suministros
-- Alertas automáticas para reabastecimiento
-- Control de fechas de vencimiento
-- Evita faltantes o excesos costosos
-
-### 💬 Comunicación con Clientes
-- Sistema de mensajería integrado
-- Notificaciones de citas por email y SMS
-- Campañas de marketing
-- Recordatorios de vacunas
-
-## Usuarios del Sistema
-
-### Credenciales de Acceso
-
-**Usuario:** `daniel`  
-**Contraseña:** `****`  
-**Nombre:** Dr. Daniel Malagrino  
-**Foto:** daniel.png  
-
-**Usuario:** `liliana`  
-**Contraseña:** `****`  
-**Nombre:** Dra. Liliana Vazquez  
-**Foto:** liliana.png  
-
-## Instalación y Uso
-
-### Requisitos
-- Navegador web moderno (Chrome, Firefox, Safari, Edge)
-- Conexión a internet (para iconos de Font Awesome)
-
-### Instrucciones de Uso
-
-1. **Iniciar la Aplicación:**
-   ```bash
-   # Opción 1: Abrir directamente en el navegador
-   open index.html
-   
-   # Opción 2: Usar un servidor local simple
-   python -m http.server 8000
-   # Luego abrir http://localhost:8000
-   ```
-
-2. **Login:**
-   - Abrir `index.html` en el navegador
-   - Usar las credenciales proporcionadas arriba
-   - Hacer clic en "Iniciar Sesión"
-
-3. **Navegación:**
-   - Una vez logueado, verás el dashboard principal
-   - Usa los botones de navegación para cambiar entre secciones
-   - Tu foto y nombre aparecerán en la esquina superior derecha
-
-## Funcionalidades Principales
-
-### Registros Médicos
-- **Agregar Registro:** Botón "Nuevo Registro" para crear nuevos historiales
-- **Ver Registros:** Tabla con todos los registros médicos
-- **Estadísticas:** Tarjetas con información resumida
-- **Gestión:** Editar o eliminar registros existentes
-
-### Inventario
-- **Agregar Producto:** Botón "Agregar Producto" para nuevos items
-- **Monitoreo:** Alertas automáticas para stock bajo y productos por vencer
-- **Categorías:** Organización por tipo (Medicamentos, Vacunas, Suministros)
-- **Proveedores:** Gestión de información de proveedores
-
-### Comunicación
-- **Email:** Envío de correos electrónicos a clientes
-- **SMS:** Envío de mensajes de texto
-- **Historial:** Registro de todas las comunicaciones enviadas
-- **Plantillas:** Mensajes predefinidos para diferentes situaciones
-
-## Estructura de Archivos
-
-```
-CediapVet/
-├── index.html          # Página principal con login
-├── style.css           # Estilos de la aplicación
-├── script.js           # Lógica y funcionalidad
-├── daniel.png          # Foto del Dr. Daniel
-├── liliana.png         # Foto de la Dra. Liliana
-└── README.md           # Este archivo
-```
-
-## Tecnologías Utilizadas
-
-- **Frontend:** HTML5, CSS3, JavaScript (ES6+)
-- **Iconos:** Font Awesome 6.0
-- **Almacenamiento:** localStorage del navegador
-- **Responsive:** Diseño adaptable a diferentes tamaños de pantalla
-
-## Datos de Ejemplo
-
-El sistema viene precargado con datos de ejemplo para facilitar la demostración:
-
-- **Registros Médicos:** 2 registros de ejemplo
-- **Inventario:** 3 productos de ejemplo con diferentes estados
-- **Clientes:** 2 clientes con información de contacto
-
-## Funcionalidades Futuras
-
-- [ ] Integración con APIs de email/SMS reales
-- [ ] Reportes y gráficos
-- [ ] Backup automático de datos
-- [ ] Gestión de usuarios y permisos
-- [ ] Integración con sistemas de facturación
-- [ ] Aplicación móvil
-
-## Notas de Seguridad
-
-⚠️ **Importante:** Este es un sistema de demostración. Para uso en producción:
-- Implementar autenticación real
-- Usar base de datos segura
-- Cifrar datos sensibles
-- Implementar backups regulares
-
-## Soporte
-
-Para cualquier problema o sugerencia, contacta al desarrollador.
+**Sistema de gestión veterinaria - Interfaz web moderna**
 
 ---
 
-**CediapVet v1.0** - Sistema desarrollado para la gestión integral de clínicas veterinarias. 
+## 🎯 **Descripción**
+
+Frontend moderno para el sistema de gestión veterinaria Dalvigay. Interfaz web intuitiva y responsive construida con HTML, CSS y JavaScript vanilla.
+
+---
+
+## 🚀 **Características**
+
+- ✅ **Interfaz moderna** y responsive
+- ✅ **Gestión completa** de clientes y pacientes
+- ✅ **Control de vacunaciones** y tratamientos
+- ✅ **Análisis médicos** y estudios
+- ✅ **Dashboard interactivo** con estadísticas
+- ✅ **Búsqueda avanzada** y filtros
+- ✅ **Diseño veterinario** especializado
+
+---
+
+## 🏗 **Estructura del Proyecto**
+
+```
+dalvigay/
+├── frontend/              # 🎨 Aplicación frontend completa
+│   ├── index.html        # 🏠 Página principal
+│   ├── script.js         # ⚡ Lógica de la aplicación (207KB)
+│   ├── style.css         # 🎨 Estilos CSS (54KB)
+│   ├── api.js           # 🔗 Cliente API (23KB)
+│   ├── config.js        # ⚙️ Configuración
+│   ├── analytics.js     # 📊 Analytics
+│   ├── demo.html        # 🎬 Demo de la aplicación
+│   └── *.png           # 🖼️ Imágenes de usuarios
+├── api/                  # 📡 Endpoints de conexión
+├── server.js            # 🌐 Servidor de desarrollo Node.js
+├── package.json         # 📦 Dependencias
+├── .env                 # ⚙️ Variables de entorno (DB config)
+├── .env.example         # 📋 Ejemplo de configuración
+└── vercel.json          # 🚀 Configuración de deploy
+```
+
+---
+
+## 🛠 **Instalación y Configuración**
+
+### **Prerequisitos**
+- Node.js 16+ para el servidor de desarrollo
+- Backend CediapVet ejecutándose (repositorio separado)
+
+### **1. Clonar e instalar**
+```bash
+# Clonar el repositorio
+git clone [URL_DEL_REPO]
+cd dalvigay
+
+# Instalar dependencias
+npm install
+```
+
+### **2. Configurar conexión al backend**
+```bash
+# El archivo .env ya contiene la configuración
+# Verifica que apunte al backend correcto
+cat .env
+```
+
+### **3. Ejecutar en desarrollo**
+```bash
+# Opción 1: Servidor Node.js (recomendado)
+node server.js
+
+# Opción 2: Servidor estático simple
+npx http-server frontend/ -p 3000
+
+# Opción 3: Abrir directamente
+open frontend/index.html
+```
+
+---
+
+## 🔗 **Conexión con Backend**
+
+Este frontend se conecta al backend **CediapVet** (repositorio separado):
+- **Backend Repo**: [cediapvet](https://github.com/gadielMa/cediapvet)
+- **API Base URL**: Configurado en `.env`
+- **Endpoints**: Documentados en el backend
+
+### **Variables de Entorno**
+```env
+# Conexión al backend
+API_BASE_URL=http://localhost:8080/api
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_NAME=dalvigay_vet
+```
+
+---
+
+## 📱 **Funcionalidades**
+
+### **Dashboard Principal**
+- Vista general de estadísticas
+- Acceso rápido a funciones principales
+- Notificaciones y recordatorios
+
+### **Gestión de Clientes**
+- Registro y edición de clientes
+- Historial de visitas
+- Contacto y facturación
+
+### **Gestión de Pacientes**
+- Ficha completa de mascotas
+- Historial médico
+- Seguimiento de tratamientos
+
+### **Control Médico**
+- Vacunaciones y calendario
+- Análisis de laboratorio
+- Estudios por imágenes
+- Tratamientos y medicación
+
+### **Reportes y Búsqueda**
+- Filtros avanzados
+- Exportación de datos
+- Estadísticas visuales
+
+---
+
+## 🎨 **Tecnologías**
+
+- **Frontend**: HTML5, CSS3, JavaScript ES6+
+- **Estilos**: CSS Grid, Flexbox, Responsive Design
+- **API**: Fetch API, Promise-based
+- **Servidor**: Node.js (desarrollo)
+- **Deploy**: Vercel-ready
+
+---
+
+## 📊 **API Endpoints**
+
+El frontend consume los siguientes endpoints del backend:
+
+```
+GET    /api/clientes          # Obtener clientes
+POST   /api/clientes          # Crear cliente
+PUT    /api/clientes/{id}     # Actualizar cliente
+DELETE /api/clientes/{id}     # Eliminar cliente
+
+GET    /api/pacientes         # Obtener pacientes
+POST   /api/pacientes         # Crear paciente
+PUT    /api/pacientes/{id}    # Actualizar paciente
+DELETE /api/pacientes/{id}    # Eliminar paciente
+
+GET    /api/vacunaciones      # Obtener vacunaciones
+POST   /api/vacunaciones      # Crear vacunación
+... y más endpoints médicos
+```
+
+---
+
+## 🌐 **Deploy**
+
+### **Vercel (Recomendado)**
+```bash
+# Ya configurado en vercel.json
+vercel --prod
+```
+
+### **Netlify**
+```bash
+# Build estático
+npm run build
+# Deploy carpeta dist/
+```
+
+### **GitHub Pages**
+```bash
+# Configurar GitHub Actions o deploy manual
+```
+
+---
+
+## 🔧 **Desarrollo**
+
+### **Estructura de Archivos**
+- `frontend/` - Código fuente principal
+- `script.js` - Lógica de aplicación
+- `style.css` - Estilos CSS
+- `api.js` - Cliente para backend
+
+### **Agregar Nuevas Funciones**
+1. Crear HTML en `frontend/index.html`
+2. Añadir estilos en `frontend/style.css`
+3. Implementar lógica en `frontend/script.js`
+4. Conectar con API en `frontend/api.js`
+
+---
+
+## 🐛 **Solución de Problemas**
+
+### **Error de conexión con backend**
+```bash
+# Verificar que el backend esté ejecutándose
+curl http://localhost:8080/api/health
+
+# Verificar configuración en .env
+cat .env
+```
+
+### **Problemas de CORS**
+```bash
+# El backend ya tiene CORS configurado
+# Verificar que las URLs coincidan
+```
+
+---
+
+## 📞 **Soporte**
+
+- **Frontend**: Este repositorio
+- **Backend**: [cediapvet repo](https://github.com/gadielMa/cediapvet)
+- **Demo**: Abrir `index.html` o `demo.html`
+
+---
+
+## 🚀 **Próximas Funcionalidades**
+
+- [ ] Autenticación de usuarios
+- [ ] Modo offline
+- [ ] Notificaciones push
+- [ ] Themes personalizables
+- [ ] Mobile app (PWA)
+- [ ] Integración con calendario
+- [ ] Chat en tiempo real
+
+---
+
+**🎉 Frontend Dalvigay - Interfaz moderna para gestión veterinaria** 🐕🐱
+
+*Conectado con el backend CediapVet para una experiencia completa* 
