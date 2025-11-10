@@ -1,88 +1,88 @@
-# ANÁLISIS DE GASTOS - TARJETAS DE CRÉDITO
-## Período: Octubre - Noviembre 2025
+# 💳 ANÁLISIS DE GASTOS - TARJETAS DE CRÉDITO
+## 📅 Período: Octubre - Noviembre 2025
 
 ---
 
-## 💳 DETALLE COMPLETO DE GASTOS
+## 📋 DETALLE COMPLETO DE GASTOS
 
 ### 👨 DANIEL RODOLFO MALAGRINO
 
 ---
 
-#### **TARJETA 1: American Express (Cuenta 3766-353411-84009)**
+#### **💳 TARJETA 1: American Express (Cuenta 3766-353411-84009)**
 
-**Información de la Cuenta:**
-- Saldo Actual: $2.021.984,00
-- Vencimiento: 10/11/25
-- Límite de Crédito: $9.050.000,00
-- Saldo Consolidado al Cierre: $5.934.242,98
-- Saldo Pendiente de Planes de Pago: $2.334.246,68
-- Línea de Crédito Disponible al 02/11/25: $2.921.210,34
+**ℹ️ Información de la Cuenta:**
+- 💰 Saldo Actual: $2.021.984,00
+- 📆 Vencimiento: 10/11/25
+- 🔝 Límite de Crédito: $9.050.000,00
+- 📊 Saldo Consolidado al Cierre: $5.934.242,98
+- ⏳ Saldo Pendiente de Planes de Pago: $2.334.246,68
+- ✅ Línea de Crédito Disponible al 02/11/25: $2.921.210,34
 
-**Movimientos del Período:**
-- Saldo Anterior: $527.940,70
-- Créditos: -$380.000,00
-- Débitos: $1.874.013,38
-- Saldo Total: $2.021.954,08
-- Pago Mínimo: $1.366.617,38
+**📊 Movimientos del Período:**
+- 💵 Saldo Anterior: $527.940,70
+- ➕ Créditos: -$380.000,00
+- ➖ Débitos: $1.874.013,38
+- 💰 Saldo Total: $2.021.954,08
+- ⚠️ Pago Mínimo: $1.366.617,38
 
-**Tasas:**
-- TNA $: 101,16%
-- TNA U$: 28,97%
-- TEM $: 8,43%
-- TEM U$: 2,41%
-- CFTEA $: 198,58%
-- CFTEA U$: 40,10%
+**📈 Tasas:**
+- 💵 TNA $: 101,16%
+- 💵 TNA U$: 28,97%
+- 📊 TEM $: 8,43%
+- 📊 TEM U$: 2,41%
+- 🔺 CFTEA $: 198,58%
+- 🔺 CFTEA U$: 40,10%
 
-**Detalle de Transacciones:**
+**🧾 Detalle de Transacciones:**
 
-**8 de Octubre:**
-- CENCOSUD SA 5263: $86.374,23
+**📅 8 de Octubre:**
+- 🛒 CENCOSUD SA 5263: $86.374,23
 
-**14 de Octubre:**
-- ACREDITACIÓN DE VUESTRO PAGO (Procesado 14/10/2025): -$380.000,00 (CR)
+**📅 14 de Octubre:**
+- ✅ ACREDITACIÓN DE VUESTRO PAGO (Procesado 14/10/2025): -$380.000,00 (CR)
 
-**1 de Noviembre:**
-- NETFLIX.COM 99999999: $37.141,47
+**📅 1 de Noviembre:**
+- 📺 NETFLIX.COM 99999999: $37.141,47
 
-**2 de Noviembre:**
-- INTERESES FINANCIEROS (APLICADOS SOBRE SALDOS ACORDADOS IMPAGOS): $10.808,55
+**📅 2 de Noviembre:**
+- 💸 INTERESES FINANCIEROS (APLICADOS SOBRE SALDOS ACORDADOS IMPAGOS): $10.808,55
 
-**2 de Noviembre:**
-- PERCEPCIÓN RG 5617: $1.191.686,67
+**📅 2 de Noviembre:**
+- 🏛️ PERCEPCIÓN RG 5617: $1.191.686,67
 
 ---
 
-**Página 2 - Consumos Detallados:**
+**📄 Página 2 - Consumos Detallados:**
 
-**2 de Noviembre:**
-- IVA 21%: $2.269,80
+**📅 2 de Noviembre:**
+- 📊 IVA 21%: $2.269,80
 
-**Total de cargos en PESOS - DANIEL RODOLFO MALAGRINO: $1.328.280,72**
+**💰 Total de cargos en PESOS - DANIEL RODOLFO MALAGRINO: $1.328.280,72**
 
-**1 de Septiembre:**
-- MERCADOPAGO*BELMAR (CUOTA 02/03 DE): $134.546,66
+**📅 1 de Septiembre:**
+- 🛍️ MERCADOPAGO*BELMAR (CUOTA 02/03 DE): $134.546,66
 
-**13 de Octubre:**
-- TUENTI RECARGAS DCP 99999999: $11.000,00
+**📅 13 de Octubre:**
+- 📱 TUENTI RECARGAS DCP 99999999: $11.000,00
 
-**14 de Octubre (4 débitos):**
-- CAJA SEGUROS - DEB AUTOMATICO R11 P06607982 01 8000: $6.119,00
-- CAJA SEGUROS - DEB AUTOMATICO R11 P06607686 01 8000: $6.119,00
-- CAJA SEGUROS - DEB AUTOMATICO R11 P06607691 01 8000: $6.168,00
-- CAJA SEGUROS - DEB AUTOMATICO R11 P06607988 01 8000: $6.168,00
+**📅 14 de Octubre (4 débitos):**
+- 🛡️ CAJA SEGUROS - DEB AUTOMATICO R11 P06607982 01 8000: $6.119,00
+- 🛡️ CAJA SEGUROS - DEB AUTOMATICO R11 P06607686 01 8000: $6.119,00
+- 🛡️ CAJA SEGUROS - DEB AUTOMATICO R11 P06607691 01 8000: $6.168,00
+- 🛡️ CAJA SEGUROS - DEB AUTOMATICO R11 P06607988 01 8000: $6.168,00
 
-**23 de Octubre:**
-- TELECOM ARGENTINA: $121.751,01
+**📅 23 de Octubre:**
+- 📞 TELECOM ARGENTINA: $121.751,01
 
-**23 de Octubre:**
-- FARMACITY: $29.803,55
+**📅 23 de Octubre:**
+- 💊 FARMACITY: $29.803,55
 
-**24 de Octubre:**
-- MERCADOPAGO*CASPERPET: $93.206,00
+**📅 24 de Octubre:**
+- 🐾 MERCADOPAGO*CASPERPET: $93.206,00
 
-**24 de Octubre:**
-- MERCADOPAGO*MODELTEC: $111.677,46
+**📅 24 de Octubre:**
+- 🛍️ MERCADOPAGO*MODELTEC: $111.677,46
 
 **Total de cargos en PESOS - LILIANA NOEMI VASQUEZ: $526.558,68**
 
@@ -111,7 +111,7 @@
 
 ---
 
-#### **TARJETA 2: Banco Nación - Mastercard Platinum (Cuenta 30-50001091-2)**
+#### **💳 TARJETA 2: Banco Nación - Mastercard Platinum (Cuenta 30-50001091-2)**
 
 **Información de la Cuenta:**
 - Titular: MALAGRINO DANIEL RO
@@ -157,36 +157,36 @@
 - **SALDO ACTUAL: $498.095,08**
 - **PAGO MÍNIMO: $34.890,00**
 
-**DETALLE DEL MES:**
+**🧾 DETALLE DEL MES:**
 
-**31-Ago-25:**
-- COMBUSTIBLE (01744): $48.500,00
+**📅 31-Ago-25:**
+- ⛽ COMBUSTIBLE (01744): $48.500,00
 
-**09-Sep-25:**
-- COMBUSTIBLE (07173): $30.000,00
+**📅 09-Sep-25:**
+- ⛽ COMBUSTIBLE (07173): $30.000,00
 
-**12-Sep-25:**
-- COMBUSTIBLE (09185): $40.000,00
+**📅 12-Sep-25:**
+- ⛽ COMBUSTIBLE (09185): $40.000,00
 
-**26-Sep-25:**
-- COMBUSTIBLE (01617): $64.018,00
+**📅 26-Sep-25:**
+- ⛽ COMBUSTIBLE (01617): $64.018,00
 
-**30-Sep-25:**
-- EASY WARNES (02224): $224.203,00
+**📅 30-Sep-25:**
+- 🏠 EASY WARNES (02224): $224.203,00
 
-**CUOTAS DEL MES:**
+**💳 CUOTAS DEL MES:**
 
-**16-Ago-25:**
-- FARMACITY 235 (02/06 - 06990): $9.603,71
+**📅 16-Ago-25:**
+- 💊 FARMACITY 235 (02/06 - 06990): $9.603,71
 
-**12-Sep-25:**
-- DESPEGAR (01/09 - 01354): $96.789,43
+**📅 12-Sep-25:**
+- ✈️ DESPEGAR (01/09 - 01354): $96.789,43
 
 **TOTAL TITULAR - MALAGRINO DANIEL RO: $513.014,14**
 
 ---
 
-#### **TARJETA 3: Banco Nación - Visa Platinum (Cuenta 556518455)**
+#### **💳 TARJETA 3: Banco Nación - Visa Platinum (Cuenta 556518455)**
 
 **Información de la Cuenta:**
 - Titular: MALAGRINO DANIEL RODOLFO
@@ -236,20 +236,20 @@
 - 01-10-25: SU PAGO EN PESOS: -$24.692,00
 - 01-10-25: RI PAGO EN PESOS: -$433.030,00
 
-**20-10-25:**
-- 681864 - CAJA RGM C.09/12: $9.378,13
+**📅 20-10-25:**
+- 💰 681864 - CAJA RGM C.09/12: $9.378,13
 
-**29-08-25:**
-- 002089 - AEROLÍNEAS ARGENTINAS C.02/12: $25.210,66
+**📅 29-08-25:**
+- ✈️ 002089 - AEROLÍNEAS ARGENTINAS C.02/12: $25.210,66
 
-**19-09-25:**
-- 001984 - AFIP VEP 1520814/0778 26115: $320.387,44
+**📅 19-09-25:**
+- 🏛️ 001984 - AFIP VEP 1520814/0778 26115: $320.387,44
 
-**22-09-25:**
-- 000486 - VASQUEZ LILIANA NOEMI: $1.000,00
+**📅 22-09-25:**
+- 👩 000486 - VASQUEZ LILIANA NOEMI: $1.000,00
 
-**11-10-25:**
-- 446598 - COTO SUCURSAL 153: $4.987,80
+**📅 11-10-25:**
+- 🛒 446598 - COTO SUCURSAL 153: $4.987,80
 
 **TARJETA 8028 Total Consumos de DANIEL RO MALAGRINO: $365.059,03**
 
@@ -262,7 +262,7 @@
 
 ---
 
-#### **TARJETA 1: BBVA - Mastercard Internacional (Cuenta 1258017015)**
+#### **💳 TARJETA 1: BBVA - Mastercard Internacional (Cuenta 1258017015)**
 
 **Información de la Cuenta:**
 - Titular: VAZQUEZ LILIANA NOEMI
@@ -318,11 +318,11 @@
 
 **Consumos 5260 7000 4288 2794:**
 
-**21-Oct-25:**
-- GLOBAL ZEG GLOBAL Z00022655 10/2 (099713): $83.326,14
+**📅 21-Oct-25:**
+- 🔷 GLOBAL ZEG GLOBAL Z00022655 10/2 (099713): $83.326,14
 
-**21-Oct-25:**
-- PERSONAL FLOW PERSFLOW50610002 10/2 (649229): $26.685,01
+**📅 21-Oct-25:**
+- 📱 PERSONAL FLOW PERSFLOW50610002 10/2 (649229): $26.685,01
 
 **TOTAL CONSUMOS DE 5260 7000 4288 2794: $110.011,15**
 
@@ -343,7 +343,7 @@
 
 ---
 
-#### **TARJETA 2: BBVA - Visa Internacional (Cuenta 0247799962)**
+#### **💳 TARJETA 2: BBVA - Visa Internacional (Cuenta 0247799962)**
 
 **Información de la Cuenta:**
 - Titular: VAZQUEZ LILIANA NOEMI
@@ -417,44 +417,44 @@
 
 **Página 2 - Consumos Liliana N Vazquez:**
 
-**19-Jun-25:**
-- MERPAGOCORTASSASA C.05/09 (752796): $15.628,88
+**📅 19-Jun-25:**
+- 🛍️ MERPAGOCORTASSASA C.05/09 (752796): $15.628,88
 
-**10-Sep-25:**
-- TUNE YOUR LIFE C.02/03 (003748): $18.333,33
+**📅 10-Sep-25:**
+- 🎵 TUNE YOUR LIFE C.02/03 (003748): $18.333,33
 
-**02-Oct-25:**
-- IGUAZU ARGENTINA SA (000029): $180.000,00
+**📅 02-Oct-25:**
+- 🏞️ IGUAZU ARGENTINA SA (000029): $180.000,00
 
-**02-Oct-25:**
-- CABIFY2540FFBEDUO2 (000918): $5.132,38
+**📅 02-Oct-25:**
+- 🚗 CABIFY2540FFBEDUO2 (000918): $5.132,38
 
-**02-Oct-25:**
-- GOOGLE *Google O P1e4JzZwN USD 0.49 (120736): $0,49
+**📅 02-Oct-25:**
+- 📱 GOOGLE *Google O P1e4JzZwN USD 0.49 (120736): $0,49
 
-**02-Oct-25:**
-- BONIF. CONSUMO CABIFY2540FFBEDUO2 (000918): -$1.283,09
+**📅 02-Oct-25:**
+- ✅ BONIF. CONSUMO CABIFY2540FFBEDUO2 (000918): -$1.283,09
 
-**02-Oct-25:**
-- CABIFY2540W6D7E2AJ (008057): $4.795,00
+**📅 02-Oct-25:**
+- 🚗 CABIFY2540W6D7E2AJ (008057): $4.795,00
 
-**04-Oct-25:**
-- BONIF. CONSUMO CABIFY2540W6D7E2AJ (008057): -$1.198,75
+**📅 04-Oct-25:**
+- ✅ BONIF. CONSUMO CABIFY2540W6D7E2AJ (008057): -$1.198,75
 
-**23-Oct-25:**
-- CABIFY2543XVDYMIGP (000813): $3.485,49
+**📅 23-Oct-25:**
+- 🚗 CABIFY2543XVDYMIGP (000813): $3.485,49
 
-**23-Oct-25:**
-- CABIFY2543JXBTQUJOK (000797): $3.834,04
+**📅 23-Oct-25:**
+- 🚗 CABIFY2543JXBTQUJOK (000797): $3.834,04
 
-**23-Oct-25:**
-- BONIF. CONSUMO CABIFY2543XVDYMIGP (000813): -$871,37
+**📅 23-Oct-25:**
+- ✅ BONIF. CONSUMO CABIFY2543XVDYMIGP (000813): -$871,37
 
-**23-Oct-25:**
-- CABIFY2543JXBTQUJOK (000797): -$647,95
+**📅 23-Oct-25:**
+- 🚗 CABIFY2543JXBTQUJOK (000797): -$647,95
 
-**27-Oct-25:**
-- GLOBAL ZEG B000060055699 (216656): $81.141,65
+**📅 27-Oct-25:**
+- 🔷 GLOBAL ZEG B000060055699 (216656): $81.141,65
 
 **TOTAL CONSUMOS DE LILIANA N VAZQUEZ: $308.349,61 (U$S 0,49)**
 
@@ -485,7 +485,7 @@
 
 ---
 
-#### **TARJETA 3: Banco Hipotecario - Visa Gold (Cuenta 0304372076)**
+#### **💳 TARJETA 3: Banco Hipotecario - Visa Gold (Cuenta 0304372076)**
 
 **Información de la Cuenta:**
 - Titular: VAZQUEZ LILIANA NOEMI
@@ -535,36 +535,36 @@
 
 **Límite Disponible: $1.920.000,00**
 
-**20.06.25:**
-- 123307* - COTO MATADEROS/MONTECASETTO (Cuota 03/06): $12.629,65
+**📅 20.06.25:**
+- 🛒 123307* - COTO MATADEROS/MONTECASETTO (Cuota 03/06): $12.629,65
 
-**20.06.25:**
-- 0138274 - MERPAGO*ARELOAN*TIGERPRAWN (Cuota 02/06): $22.500,00
+**📅 20.06.25:**
+- 🛍️ 0138274 - MERPAGO*ARELOAN*TIGERPRAWN (Cuota 02/06): $22.500,00
 
-**21.08.25:**
-- 0080084 - ABMS SEGUROS GEOD0021392RE-C (Cuota 03/06): $18.317,00
+**📅 21.08.25:**
+- 🛡️ 0080084 - ABMS SEGUROS GEOD0021392RE-C (Cuota 03/06): $18.317,00
 
-**01.09.25:**
-- 0462424 - PERSONAL FLOW 1003324754041003: $17.377,00
+**📅 01.09.25:**
+- 📱 0462424 - PERSONAL FLOW 1003324754041003: $17.377,00
 
-**11.09.25:**
-- 123307* - COTO MATADEROS: $5.597,96
+**📅 11.09.25:**
+- 🛒 123307* - COTO MATADEROS: $5.597,96
 
 **TARJETA 8175 Total Consumos de YOEL V MALAGRINO: $101.157,24**
 
-**25.08.25:**
-- 000531 - BILLETERA MERCADORE SRL (Cuota 13/18): $11.444,45
+**📅 25.08.25:**
+- 💼 000531 - BILLETERA MERCADORE SRL (Cuota 13/18): $11.444,45
 
-**11.06.25:**
-- 8757398 - MERPAGO*IMPACTOPOS (Cuota 04/06): $5.893,76
+**📅 11.06.25:**
+- 🛍️ 8757398 - MERPAGO*IMPACTOPOS (Cuota 04/06): $5.893,76
 
-**Tarjeta 7803 Total Consumos de YOEL V MALAGRINO: $72.138,09**
+**💰 Tarjeta 7803 Total Consumos de YOEL V MALAGRINO: $72.138,09**
 
-**25.09.25:**
-- 123307* - COTO MATADEROS: $4.625,62
+**📅 25.09.25:**
+- 🛒 123307* - COTO MATADEROS: $4.625,62
 
-**25.09.25:**
-- 123307* - COTO MATADEROS: $4.044,45
+**📅 25.09.25:**
+- 🛒 123307* - COTO MATADEROS: $4.044,45
 
 **SALDO PENDIENTE: $41.074,38**
 
@@ -624,134 +624,134 @@
 
 ### 📈 GASTOS DE DANIEL:
 
-#### **Impuestos y Percepciones: $1.512.074,11**
+#### **🏛️ Impuestos y Percepciones: $1.512.074,11**
 - PERCEPCIÓN RG 5617: $1.191.686,67 ⚠️⚠️⚠️
 - AFIP VEP 1520814/0778: $320.387,44 ⚠️⚠️
 - **Análisis**: Gastos impositivos extremadamente elevados, indica actividad comercial o ingresos muy altos
 
-#### **Mejoras del Hogar: $224.203,00**
+#### **🏠 Mejoras del Hogar: $224.203,00**
 - EASY WARNES: $224.203,00 ⚠️⚠️
 - **Análisis**: Gasto muy elevado, posiblemente obra o refacción importante
 
-#### **Combustible: $182.518,00**
+#### **⛽ Combustible: $182.518,00**
 - 31-Ago: $48.500,00
 - 09-Sep: $30.000,00
 - 12-Sep: $40.000,00
 - 26-Sep: $64.018,00
 - **Análisis**: Gasto normal para uso frecuente de vehículo
 
-#### **Servicios de Telecomunicaciones: $121.751,01**
+#### **📞 Servicios de Telecomunicaciones: $121.751,01**
 - TELECOM ARGENTINA: $121.751,01 ⚠️⚠️
 - **Análisis**: Muy elevado, posiblemente incluye servicios empresariales o múltiples líneas
 
-#### **Viajes y Turismo: $122.000,09**
+#### **✈️ Viajes y Turismo: $122.000,09**
 - DESPEGAR: $96.789,43 ⚠️
 - AEROLÍNEAS ARGENTINAS: $25.210,66
 - **Análisis**: Gastos considerables en viajes
 
-#### **Servicios Profesionales en el Exterior: USD $2.711,46**
+#### **🌍 Servicios Profesionales en el Exterior: USD $2.711,46**
 - PROFESSYCHE (UK POUND): USD $2.711,46 (equivalente a 1.989,30 libras) ⚠️⚠️
 - Incluye cargo administrativo de USD $53,17
 - **Análisis**: Gasto significativo en dólares, posiblemente servicios profesionales o software
 
-#### **Supermercados y Retail: $91.362,03**
+#### **🛒 Supermercados y Retail: $91.362,03**
 - CENCOSUD SA: $86.374,23
 - COTO SUCURSAL 153: $4.987,80
 - **Análisis**: Gastos normales de supermercado
 
-#### **Farmacias: $39.407,26**
+#### **💊 Farmacias: $39.407,26**
 - FARMACITY (2 compras): $39.407,26
 - **Análisis**: Gasto razonable
 
-#### **Streaming y Entretenimiento: $47.911,96**
+#### **📺 Streaming y Entretenimiento: $47.911,96**
 - NETFLIX (2 cargos): $48.011,96
 - **Análisis**: Gasto normal en servicios de streaming
 
-#### **Seguros: $24.574,00**
+#### **🛡️ Seguros: $24.574,00**
 - CAJA SEGUROS (4 débitos automáticos): $24.574,00
 - **Análisis**: Gasto fijo normal
 
-#### **MercadoPago - Diversos Comercios: $339.430,12**
+#### **🛍️ MercadoPago - Diversos Comercios: $339.430,12**
 - MERCADOPAGO*BELMAR: $134.546,66 ⚠️
 - MERCADOPAGO*CASPERPET: $93.206,00
 - MERCADOPAGO*MODELTEC: $111.677,46
 - **Análisis**: Gastos distribuidos en varios comercios
 
-#### **Recargas Móviles: $11.000,00**
+#### **📱 Recargas Móviles: $11.000,00**
 - TUENTI RECARGAS: $11.000,00
 - **Análisis**: Gasto normal
 
-#### **Otros Servicios: $9.378,13**
+#### **💼 Otros Servicios: $9.378,13**
 - CAJA RGM: $9.378,13
 - VASQUEZ LILIANA NOEMI: $1.000,00
 
-#### **Gastos de Tarjetas Adicionales: $545.732,66**
+#### **👥 Gastos de Tarjetas Adicionales: $545.732,66**
 - Liliana Noemi Vasquez: $526.558,68
 - Yoel Vicente Malagrino: $8.303,49
 - Victoria Velia Malagrino: $10.870,49
 
-#### **Intereses y Cargos Financieros: $10.808,55**
+#### **💸 Intereses y Cargos Financieros: $10.808,55**
 - Intereses financieros sobre saldos: $10.808,55
 
 ---
 
 ### 📈 GASTOS DE LILIANA:
 
-#### **Turismo: $180.000,00**
+#### **🏞️ Turismo: $180.000,00**
 - IGUAZU ARGENTINA SA: $180.000,00 ⚠️⚠️
 - **Análisis**: Gasto muy elevado, probablemente paquete turístico completo a Cataratas del Iguazú
 
-#### **Servicios GLOBAL ZEG: $164.467,79**
+#### **🔷 Servicios GLOBAL ZEG: $164.467,79**
 - GLOBAL ZEG (Mastercard): $83.326,14 ⚠️
 - GLOBAL ZEG (Visa): $81.141,65 ⚠️
 - **Total**: $164.467,79 ⚠️⚠️
 - **Análisis**: Gasto elevado y recurrente en servicio no identificado claramente (posiblemente seguros o servicios financieros)
 
-#### **Telefonía Móvil: $44.062,01**
+#### **📱 Telefonía Móvil: $44.062,01**
 - PERSONAL FLOW (Mastercard): $26.685,01
 - PERSONAL FLOW (Hipotecario): $17.377,00
 - **Análisis**: Gasto en servicios de telefonía móvil
 
-#### **Supermercados COTO: $27.297,68**
+#### **🛒 Supermercados COTO: $27.297,68**
 - Múltiples compras en COTO MATADEROS: $27.297,68
 - **Análisis**: Gastos normales de supermercado
 
-#### **Comisiones Bancarias: $22.231,40**
+#### **🏦 Comisiones Bancarias: $22.231,40**
 - COMISIÓN CUENTA PLUS (BBVA Visa): $22.231,40 ⚠️
 - **Análisis**: Comisión bancaria elevada
 
-#### **Streaming y Entretenimiento: $18.333,33**
+#### **🎵 Streaming y Entretenimiento: $18.333,33**
 - TUNE YOUR LIFE: $18.333,33
 - **Análisis**: Gasto razonable en servicios de streaming
 
-#### **Seguros: $18.317,00**
+#### **🛡️ Seguros: $18.317,00**
 - ABMS SEGUROS GEOD0021392RE-C: $18.317,00
 - **Análisis**: Gasto fijo normal
 
-#### **Transporte (Cabify): ~$10.000,00 (neto)**
+#### **🚗 Transporte (Cabify): ~$10.000,00 (neto)**
 - Múltiples viajes con bonificaciones aplicadas
 - Gasto bruto: $17.246,91
 - Bonificaciones: -$4.001,16
 - Gasto neto: $13.245,75
 - **Análisis**: Uso frecuente de transporte privado con descuentos
 
-#### **MercadoPago - Diversos: $39.072,33**
+#### **🛍️ MercadoPago - Diversos: $39.072,33**
 - MERPAGOCORTASSASA: $15.628,88
 - MERPAGO*ARELOAN*TIGERPRAWN: $22.500,00
 - MERCADOPAGO*MEDIADORE SRL: $11.444,45
 - MERPAGO*IMPACTOPOS: $5.893,76
 - **Análisis**: Gastos diversos en comercios
 
-#### **Servicios Digitales: USD $0,49**
+#### **📱 Servicios Digitales: USD $0,49**
 - Google Play: USD $0,49
 - **Análisis**: Gasto mínimo
 
-#### **Intereses y Cargos Financieros: $1.300,32**
+#### **💸 Intereses y Cargos Financieros: $1.300,32**
 - Intereses financiación: $859,44
 - Impuestos sobre intereses: $440,88
 - **Análisis**: Costos financieros por financiación de saldos
 
-#### **Gastos de Tarjetas Adicionales (Yoel V Malagrino): $173.295,33**
+#### **👥 Gastos de Tarjetas Adicionales (Yoel V Malagrino): $173.295,33**
 - En tarjeta Banco Hipotecario: $173.295,33
 
 ---
@@ -842,7 +842,7 @@
 
 ---
 
-### **Observaciones Clave:**
+### **🔍 Observaciones Clave:**
 
 1. **Los gastos de Daniel están dominados por impuestos y percepciones** ($1.512.074,11), lo que representa el 62,7% de su gasto total en pesos. Esto sugiere:
    - Actividad comercial o profesional importante
@@ -869,7 +869,7 @@
 
 ---
 
-### **Recomendaciones:**
+### **💡 Recomendaciones:**
 
 1. **Revisar el gasto en TELECOM** ($121.751,01) - Verificar si todos los servicios son necesarios
 
@@ -901,4 +901,4 @@
 | **Tarjetas Activas** | 3 | 3 | - |
 | **Intereses Pagados** | $10.808,55 | $1.300,32 | - |
 
-**Conclusión Final**: Daniel gasta significativamente más que Liliana, principalmente debido a obligaciones impositivas relacionadas con actividad comercial/profesional. Excluyendo impuestos, Daniel aún gasta 33% más que Liliana. Ambos tienen oportunidades de optimización en servicios recurrentes y comisiones bancarias.
+**✅ Conclusión Final**: Daniel gasta significativamente más que Liliana, principalmente debido a obligaciones impositivas relacionadas con actividad comercial/profesional. Excluyendo impuestos, Daniel aún gasta 33% más que Liliana. Ambos tienen oportunidades de optimización en servicios recurrentes y comisiones bancarias.
